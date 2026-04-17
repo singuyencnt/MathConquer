@@ -275,16 +275,15 @@ export default function App() {
           <div className="geometric-card !p-4 bg-bg-main border-none">
             <p className="text-[0.65rem] font-bold text-text-sub uppercase tracking-widest mb-2">Hỗ trợ 24/7</p>
             <p className="text-xs text-text-main font-medium mb-3">Gặp khó khăn khi sử dụng? Liên hệ giáo viên ngay.</p>
-            <button 
-              onClick={() => {
-                const mailto = 'mailto:honghue1908@gmail.com,nguyentran.cnt@gmail.com?subject=Hỗ trợ ứng dụng MATHCONQUER';
-                window.location.href = mailto;
-              }}
+            <a 
+              href="mailto:honghue1908@gmail.com?cc=nguyentran.cnt@gmail.com&subject=Hỗ trợ ứng dụng MATHCONQUER"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-full py-2 bg-white border border-border-main rounded-lg text-[0.7rem] font-bold uppercase tracking-wider hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
             >
               <Mail className="w-3 h-3" />
               Liên hệ
-            </button>
+            </a>
           </div>
         </div>
       </nav>

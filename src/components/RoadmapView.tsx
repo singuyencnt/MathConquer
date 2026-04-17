@@ -91,22 +91,22 @@ export default function RoadmapView({ user, onBack }: Props) {
     }
   };
 
-  const handleClearHistory = async () => {
-    if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử lộ trình của mình? Hành động này không thể hoàn tác.")) return;
+  const handleDeleteRoadmap = async (e: React.MouseEvent, roadmap: AssessmentData) => {
+    e.stopPropagation(); // Avoid selecting the roadmap when clicking delete
+    if (!roadmap.id) return;
+    if (!confirm("Bạn có chắc chắn muốn xóa lộ trình này?")) return;
     
     setClearing(true);
     try {
-      const q = query(collection(db, 'assessments'), where('userId', '==', user.uid));
-      const snapshot = await getDocs(q);
-      const batch = writeBatch(db);
-      snapshot.docs.forEach(d => {
-        batch.delete(d.ref);
-      });
-      await batch.commit();
-      setHistory([]);
-      setSelectedRoadmap(null);
+      await deleteDoc(doc(db, 'assessments', roadmap.id));
+      const updatedHistory = history.filter(item => item.id !== roadmap.id);
+      setHistory(updatedHistory);
+      if (selectedRoadmap?.id === roadmap.id) {
+        setSelectedRoadmap(updatedHistory.length > 0 ? updatedHistory[0] : null);
+      }
     } catch (error) {
-      console.error("Error clearing history:", error);
+      console.error("Error deleting roadmap:", error);
+      alert("Không thể xóa lộ trình. Vui lòng thử lại.");
     } finally {
       setClearing(false);
     }
@@ -171,49 +171,49 @@ export default function RoadmapView({ user, onBack }: Props) {
           
           <div className="space-y-3">
             {history.map((item, idx) => (
-              <button
-                key={item.id || idx}
-                onClick={() => setSelectedRoadmap(item)}
-                className={`w-full text-left p-4 rounded-xl border transition-all flex flex-col gap-1 group ${
-                  selectedRoadmap?.id === item.id 
-                  ? 'bg-stage-bg border-primary shadow-sm' 
-                  : 'bg-white border-border-main hover:border-primary/50'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-[0.6rem] font-black uppercase tracking-widest ${selectedRoadmap?.id === item.id ? 'text-primary' : 'text-text-sub'}`}>
-                    Giai đoạn {item.stage}
-                  </span>
-                  <CheckCircle2 className={`w-3 h-3 ${selectedRoadmap?.id === item.id ? 'text-primary' : 'text-border-main'}`} />
-                </div>
-                <div className={`font-bold text-sm ${selectedRoadmap?.id === item.id ? 'text-text-main' : 'text-text-sub group-hover:text-text-main'}`}>
-                  Lộ trình {new Date(item.createdAt?.toDate?.() || Date.now()).toLocaleDateString('vi-VN')}
-                </div>
-                <div className="text-[0.65rem] text-text-sub italic">Mục tiêu: {item.targetScore}đ</div>
-              </button>
+              <div key={item.id || idx} className="relative group/item">
+                <button
+                  onClick={() => setSelectedRoadmap(item)}
+                  className={`w-full text-left p-4 rounded-xl border transition-all flex flex-col gap-1 ${
+                    selectedRoadmap?.id === item.id 
+                    ? 'bg-stage-bg border-primary shadow-sm' 
+                    : 'bg-white border-border-main hover:border-primary/50 text-text-sub'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[0.6rem] font-black uppercase tracking-widest ${selectedRoadmap?.id === item.id ? 'text-primary' : 'text-text-sub'}`}>
+                      Giai đoạn {item.stage}
+                    </span>
+                    <CheckCircle2 className={`w-3 h-3 ${selectedRoadmap?.id === item.id ? 'text-primary' : 'text-border-main'}`} />
+                  </div>
+                  <div className={`font-bold text-sm ${selectedRoadmap?.id === item.id ? 'text-text-main' : 'text-text-sub group-hover:text-text-main'}`}>
+                    Lộ trình {new Date(item.createdAt?.toDate?.() || Date.now()).toLocaleDateString('vi-VN')}
+                  </div>
+                  <div className="text-[0.65rem] italic">Mục tiêu: {item.targetScore}đ</div>
+                </button>
+                <button
+                  onClick={(e) => handleDeleteRoadmap(e, item)}
+                  className="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity hover:bg-red-100"
+                  title="Xóa lộ trình này"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
             ))}
           </div>
 
-          <div className="pt-6 mt-6 border-t border-border-main flex flex-col gap-2">
-            <button
-              onClick={handleClearHistory}
-              disabled={clearing}
-              className="flex items-center justify-center gap-2 w-full py-2.5 text-[0.65rem] font-bold text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
-            >
-              {clearing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-              XÓA LỊCH SỬ CỦA TÔI
-            </button>
-            {user.email === 'minhkhoiklk@gmail.com' && (
+          {user.email === 'minhkhoiklk@gmail.com' && (
+            <div className="pt-6 mt-6 border-t border-border-main">
               <button
                 onClick={handleClearAllGlobalHistory}
                 disabled={clearing}
-                className="flex items-center justify-center gap-2 w-full py-2.5 text-[0.65rem] font-black text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors border border-red-700"
+                className="flex items-center justify-center gap-2 w-full py-2.5 text-[0.65rem] font-black text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors border border-red-700 shadow-sm"
               >
                 {clearing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                 XÓA SẠCH DỮ LIỆU CẢ HỆ THỐNG
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="geometric-card bg-text-main text-white border-none items-center text-center py-10 relative overflow-hidden">
