@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (UID)
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - fullName: string (required)
+    //   - className: string (optional)
+    //   - role: string (required, 'student' or 'teacher')
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: assessments
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - stage: number (required, 1-4)
+    //   - scores: map (HK scores)
+    //   - targetScore: number
+    //   - dailyTime: number
+    //   - examType: string
+    //   - topicConfidence: map
+    //   - casioSkill: string
+    //   - barriers: list
+    //   - aiRole: string
+    //   - roadmap: string
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher' ||
+         (request.auth.token.email == "minhkhoiklk@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'fullName', 'role', 'createdAt']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.fullName is string && data.fullName.size() < 100 &&
+             data.role in ['student', 'teacher'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidAssessment(data) {
+      return data.keys().hasAll(['userId', 'stage', 'createdAt']) &&
+             data.userId is string &&
+             data.stage is number && data.stage >= 1 && data.stage <= 4 &&
+             data.createdAt is timestamp &&
+             (!('roadmap' in data) || (data.roadmap is string && data.roadmap.size() < 50000));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    (isOwner(userId) && request.resource.data.role == 'student' || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    (isOwner(userId) && request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /assessments/{assessmentId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && isValidAssessment(request.resource.data) && 
+                    (request.auth.uid == request.resource.data.userId || isAdmin());
+      allow update: if isAuthenticated() && isValidAssessment(request.resource.data) && 
+                    (request.auth.uid == resource.data.userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}

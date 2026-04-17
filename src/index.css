@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-primary: #2563eb;
+  --color-bg-main: #f8fafc;
+  --color-card: #ffffff;
+  --color-border-main: #e2e8f0;
+  --color-text-main: #1e293b;
+  --color-text-sub: #64748b;
+  --color-accent: #0ea5e9;
+  --color-success: #22c55e;
+  --color-stage-bg: #eff6ff;
+}
+
+/* Roadmap Markdown Styling */
+.markdown-body {
+  @apply text-text-main leading-relaxed;
+}
+
+.markdown-body h1 {
+  @apply text-3xl font-black mb-6 mt-8 pb-4 border-b-2 border-primary/20 text-primary uppercase tracking-tighter;
+}
+
+.markdown-body h2 {
+  @apply text-2xl font-bold mb-4 mt-8 flex items-center gap-2 text-text-main;
+}
+
+.markdown-body h2::before {
+  content: "";
+  @apply w-1.5 h-6 bg-primary rounded-full block;
+}
+
+.markdown-body h3 {
+  @apply text-xl font-bold mb-3 mt-6 text-primary/80;
+}
+
+.markdown-body p {
+  @apply mb-4 text-text-main/90 font-medium;
+}
+
+.markdown-body ul {
+  @apply list-none space-y-3 mb-6;
+}
+
+.markdown-body ul li {
+  @apply relative pl-7 text-sm md:text-base font-medium text-text-main/80;
+}
+
+.markdown-body ul li::before {
+  content: "✓";
+  @apply absolute left-0 top-1 w-5 h-5 bg-success/10 text-success rounded-full flex items-center justify-center text-[0.6rem] font-black;
+}
+
+.markdown-body strong {
+  @apply font-black text-primary;
+}
+
+.markdown-body blockquote {
+  @apply border-l-4 border-accent bg-accent/5 p-4 rounded-r-xl italic mb-6 text-sm text-text-sub;
+}
+
+/* Print Overrides */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+  }
+
+  .geometric-card {
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    padding: 2rem !important;
+  }
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-bg-main text-text-main;
+  }
+}
+
+.geometric-card {
+  @apply bg-card border border-border-main rounded-xl p-5 flex flex-col;
+}
+
+.geometric-card-title {
+  @apply text-[0.85rem] uppercase tracking-wider text-text-sub font-bold mb-4 flex justify-between items-center;
+}
+
+.phase-banner {
+  @apply bg-linear-to-br from-[#1e293b] to-[#334155] text-white p-6 rounded-xl flex justify-between items-center;
+}
+
+.day-item {
+  @apply grid grid-cols-[80px_1fr_120px] items-center p-3 bg-bg-main rounded-lg border-l-4 border-primary;
+}

@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Thông tin người dùng (Học sinh hoặc Giáo viên)",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "fullName": { "type": "string" },
+        "className": { "type": "string", "description": "Ví dụ: 12A, 12B..." },
+        "role": { "type": "string", "enum": ["student", "teacher"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "fullName", "role"]
+    },
+    "Assessment": {
+      "title": "Assessment",
+      "description": "Phiếu tự đánh giá năng lực và lộ trình cá nhân hóa",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "stage": { "type": "number", "description": "Giai đoạn 1, 2, 3 hoặc 4" },
+        "scores": {
+          "type": "object",
+          "properties": {
+            "midHK1": { "type": "number" },
+            "endHK1": { "type": "number" },
+            "midHK2": { "type": "number" },
+            "endHK2": { "type": "number" }
+          }
+        },
+        "targetScore": { "type": "number" },
+        "dailyTime": { "type": "number", "description": "Thời gian tối đa mỗi ngày (phút)" },
+        "examType": { "type": "string", "enum": ["Xét tốt nghiệp", "Xét đại học"] },
+        "topicConfidence": {
+          "type": "object",
+          "description": "Đánh giá năng lực theo chuyên đề (Rất tự tin, Bình thường, Rất yếu/Mất gốc)"
+        },
+        "casioSkill": { "type": "string", "enum": ["Thành thạo", "Biết cơ bản", "Chưa biết dùng"] },
+        "barriers": { "type": "array", "items": { "type": "string" } },
+        "aiRole": { "type": "string" },
+        "roadmap": { "type": "string", "description": "Lộ trình chi tiết do AI tạo ra" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "stage", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Thông tin cá nhân của người dùng"
+    },
+    "/assessments/{assessmentId}": {
+      "schema": "Assessment",
+      "description": "Các bản đánh giá và lộ trình của học sinh"
+    }
+  }
+}
