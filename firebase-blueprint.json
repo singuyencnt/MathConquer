@@ -41,6 +41,30 @@
         "barriers": { "type": "array", "items": { "type": "string" } },
         "aiRole": { "type": "string" },
         "roadmap": { "type": "string", "description": "Lộ trình chi tiết do AI tạo ra" },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "content": { "type": "string" },
+              "completed": { "type": "boolean" },
+              "week": { "type": "number" }
+            }
+          }
+        },
+        "learningLogs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "date": { "type": "string", "format": "date-time" },
+              "content": { "type": "string" },
+              "feeling": { "type": "string", "enum": ["Tốt", "Bình thường", "Cần cố gắng"] }
+            }
+          }
+        },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "stage", "createdAt"]

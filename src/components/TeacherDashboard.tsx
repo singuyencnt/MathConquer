@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, getDocs, query, where, orderBy, writeBatch } from 'firebase/firestore';
 import { UserProfile, AssessmentData } from '../types';
-import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, AlertTriangle, ListChecks, MessageSquare, Smile, Meh, Frown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 
@@ -80,6 +80,12 @@ export default function TeacherDashboard({ user, onBack }: Props) {
     } finally {
       setLoadingDetails(false);
     }
+  };
+
+  const calculateStudentProgress = (assessment: AssessmentData) => {
+    if (!assessment.tasks || assessment.tasks.length === 0) return 0;
+    const completed = assessment.tasks.filter(t => t.completed).length;
+    return Math.round((completed / assessment.tasks.length) * 100);
   };
 
   const filteredStudents = students.filter(s => 
@@ -228,9 +234,67 @@ export default function TeacherDashboard({ user, onBack }: Props) {
                         </div>
                       </div>
                     </div>
-                    <div className="p-8 md:p-10 prose prose-slate max-w-none">
-                      <div className="markdown-body">
-                        <Markdown>{assessment.roadmap || ''}</Markdown>
+                    <div className="p-8 md:p-10">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 space-y-6">
+                          <div className="markdown-body border border-border-main p-8 rounded-2xl bg-white">
+                            <Markdown>{assessment.roadmap || ''}</Markdown>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          {/* Progress Monitoring for Teacher */}
+                          <div className="bg-slate-50 p-6 rounded-2xl border border-border-main scroll-mt-20">
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2">
+                                <ListChecks className="w-4 h-4 text-primary" />
+                                <h4 className="text-[0.65rem] font-black text-text-main uppercase tracking-widest">Tiến độ lộ trình</h4>
+                              </div>
+                              <span className="text-lg font-black text-primary">{calculateStudentProgress(assessment)}%</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mb-6">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${calculateStudentProgress(assessment)}%` }}
+                                className="h-full bg-primary"
+                              />
+                            </div>
+                            <p className="text-[0.65rem] text-text-sub font-medium italic">Tỷ lệ hoàn thành dựa trên danh sách nhiệm vụ AI đã thiết lập.</p>
+                          </div>
+
+                          {/* Student Logs for Teacher */}
+                          <div className="bg-slate-50 p-6 rounded-2xl border border-border-main">
+                            <div className="flex items-center gap-2 mb-4">
+                              <MessageSquare className="w-4 h-4 text-primary" />
+                              <h4 className="text-[0.65rem] font-black text-text-main uppercase tracking-widest">Nhật ký của em</h4>
+                            </div>
+                            
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                              {assessment.learningLogs && assessment.learningLogs.length > 0 ? (
+                                assessment.learningLogs.slice().reverse().map((log) => (
+                                  <div key={log.id} className="p-3 bg-white border border-border-main rounded-xl">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <div className="flex items-center gap-1.5">
+                                        {log.feeling === 'Tốt' ? <Smile className="w-3 h-3 text-success" /> : log.feeling === 'Bình thường' ? <Meh className="w-3 h-3 text-accent" /> : <Frown className="w-3 h-3 text-red-500" />}
+                                        <span className="text-[0.55rem] font-bold text-text-sub uppercase">
+                                          {new Date(log.date?.toDate?.() || log.date).toLocaleDateString('vi-VN')}
+                                        </span>
+                                      </div>
+                                      <span className={`text-[0.5rem] font-bold px-1.5 py-0.5 rounded-full ${
+                                        log.feeling === 'Tốt' ? 'bg-green-50 text-green-600' : log.feeling === 'Bình thường' ? 'bg-orange-50 text-orange-600' : 'bg-red-50 text-red-600'
+                                      }`}>
+                                        {log.feeling}
+                                      </span>
+                                    </div>
+                                    <p className="text-[0.7rem] text-text-main font-medium leading-relaxed">{log.content}</p>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-[0.65rem] text-text-sub italic text-center py-4">Học sinh chưa ghi nhật ký.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

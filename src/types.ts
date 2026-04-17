@@ -9,6 +9,20 @@ export interface UserProfile {
   createdAt: any;
 }
 
+export interface RoadmapTask {
+  id: string;
+  content: string;
+  completed: boolean;
+  week: number;
+}
+
+export interface LearningLog {
+  id: string;
+  date: any;
+  content: string;
+  feeling: 'Tốt' | 'Bình thường' | 'Cần cố gắng';
+}
+
 export interface AssessmentData {
   id?: string;
   userId: string;
@@ -27,6 +41,8 @@ export interface AssessmentData {
   barriers: string[];
   aiRole: string;
   roadmap?: string;
+  tasks?: RoadmapTask[];
+  learningLogs?: LearningLog[];
   durationWeeks?: number;
   createdAt: any;
 }

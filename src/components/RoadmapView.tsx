@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { db } from '../firebase';
-import { collection, query, where, orderBy, getDocs, deleteDoc, doc, writeBatch } from 'firebase/firestore';
-import { UserProfile, AssessmentData } from '../types';
+import { collection, query, where, orderBy, getDocs, deleteDoc, doc, writeBatch, updateDoc, arrayUnion } from 'firebase/firestore';
+import { UserProfile, AssessmentData, RoadmapTask, LearningLog } from '../types';
 import Markdown from 'react-markdown';
-import { ChevronLeft, Download, Calendar, Target, Clock, Sparkles, Loader2, History, CheckCircle2, FileText, Printer, GraduationCap, Trash2, ExternalLink } from 'lucide-react';
+import { ChevronLeft, Download, Calendar, Target, Clock, Sparkles, Loader2, History, CheckCircle2, FileText, Printer, GraduationCap, Trash2, ExternalLink, ListChecks, MessageSquare, Plus, Smile, Meh, Frown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -19,6 +19,9 @@ export default function RoadmapView({ user, onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [newLog, setNewLog] = useState('');
+  const [logFeeling, setLogFeeling] = useState<'Tốt' | 'Bình thường' | 'Cần cố gắng'>('Bình thường');
+  const [isAddingLog, setIsAddingLog] = useState(false);
   const roadmapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -131,6 +134,57 @@ export default function RoadmapView({ user, onBack }: Props) {
     } finally {
       setClearing(false);
     }
+  };
+
+  const handleToggleTask = async (taskId: string) => {
+    if (!selectedRoadmap || !selectedRoadmap.id) return;
+    
+    const updatedTasks = selectedRoadmap.tasks?.map(t => 
+      t.id === taskId ? { ...t, completed: !t.completed } : t
+    ) || [];
+
+    try {
+      await updateDoc(doc(db, 'assessments', selectedRoadmap.id), {
+        tasks: updatedTasks
+      });
+      setSelectedRoadmap({ ...selectedRoadmap, tasks: updatedTasks });
+      setHistory(history.map(h => h.id === selectedRoadmap.id ? { ...h, tasks: updatedTasks } : h));
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
+  };
+
+  const handleAddLog = async () => {
+    if (!newLog.trim() || !selectedRoadmap || !selectedRoadmap.id) return;
+    
+    setIsAddingLog(true);
+    const logEntry: LearningLog = {
+      id: Math.random().toString(36).substr(2, 9),
+      date: new Date(),
+      content: newLog,
+      feeling: logFeeling
+    };
+
+    try {
+      await updateDoc(doc(db, 'assessments', selectedRoadmap.id), {
+        learningLogs: arrayUnion(logEntry)
+      });
+      
+      const updatedLogs = [...(selectedRoadmap.learningLogs || []), logEntry];
+      setSelectedRoadmap({ ...selectedRoadmap, learningLogs: updatedLogs });
+      setHistory(history.map(h => h.id === selectedRoadmap.id ? { ...h, learningLogs: updatedLogs } : h));
+      setNewLog('');
+    } catch (error) {
+      console.error("Error adding log:", error);
+    } finally {
+      setIsAddingLog(false);
+    }
+  };
+
+  const calculateProgress = () => {
+    if (!selectedRoadmap?.tasks || selectedRoadmap.tasks.length === 0) return 0;
+    const completed = selectedRoadmap.tasks.filter(t => t.completed).length;
+    return Math.round((completed / selectedRoadmap.tasks.length) * 100);
   };
 
   if (loading) {
@@ -316,12 +370,137 @@ export default function RoadmapView({ user, onBack }: Props) {
                 </div>
 
                 {/* Main Content Markdown */}
-                <div className="geometric-card !p-10 md:!p-16 relative">
-                  <div className="absolute top-8 right-8 text-primary/10 select-none">
-                    <GraduationCap className="w-32 h-32 rotate-12" />
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                  <div className="xl:col-span-2 space-y-8">
+                    <div className="geometric-card !p-10 md:!p-12 relative overflow-hidden">
+                      <div className="absolute top-8 right-8 text-primary/10 select-none no-print">
+                        <GraduationCap className="w-32 h-32 rotate-12" />
+                      </div>
+                      <div className="markdown-body relative z-10">
+                        <Markdown>{selectedRoadmap.roadmap || ''}</Markdown>
+                      </div>
+                    </div>
+
+                    {/* Learning Logs Section */}
+                    <div className="geometric-card no-print">
+                      <div className="flex items-center gap-3 mb-6">
+                        <MessageSquare className="w-5 h-5 text-primary" />
+                        <h3 className="font-bold text-text-main uppercase tracking-tighter">Nhật ký học tập</h3>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="bg-bg-main p-6 rounded-2xl space-y-4">
+                          <textarea
+                            value={newLog}
+                            onChange={(e) => setNewLog(e.target.value)}
+                            placeholder="Ghi chú lại những gì bạn đã học hôm nay hoặc những khó khăn gặp phải..."
+                            className="w-full bg-white border border-border-main rounded-xl p-4 text-sm focus:ring-2 focus:ring-primary outline-none min-h-[100px]"
+                          />
+                          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border-main/50 pt-4">
+                            <div className="flex items-center gap-4">
+                              <span className="text-xs font-bold text-text-sub uppercase tracking-wider">Cảm nhận:</span>
+                              <div className="flex gap-2">
+                                {(['Tốt', 'Bình thường', 'Cần cố gắng'] as const).map(f => (
+                                  <button
+                                    key={f}
+                                    onClick={() => setLogFeeling(f)}
+                                    className={`p-2 rounded-lg border transition-all flex items-center gap-2 ${logFeeling === f ? 'bg-primary border-primary text-white' : 'bg-white border-border-main text-text-sub hover:border-primary'}`}
+                                  >
+                                    {f === 'Tốt' ? <Smile className="w-4 h-4" /> : f === 'Bình thường' ? <Meh className="w-4 h-4" /> : <Frown className="w-4 h-4" />}
+                                    <span className="text-[0.65rem] font-bold">{f}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            <button
+                              onClick={handleAddLog}
+                              disabled={isAddingLog || !newLog.trim()}
+                              className="bg-primary text-white px-6 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition-all flex items-center gap-2 disabled:opacity-50"
+                            >
+                              {isAddingLog ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                              Ghi nhật ký
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          {selectedRoadmap.learningLogs?.slice().reverse().map((log) => (
+                            <div key={log.id} className="p-4 border border-border-main rounded-xl hover:border-primary/30 transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  {log.feeling === 'Tốt' ? <Smile className="w-4 h-4 text-success" /> : log.feeling === 'Bình thường' ? <Meh className="w-4 h-4 text-accent" /> : <Frown className="w-4 h-4 text-red-500" />}
+                                  <span className="text-[0.6rem] font-black text-text-sub uppercase tracking-widest">
+                                    {new Date(log.date?.toDate?.() || log.date).toLocaleDateString('vi-VN')}
+                                  </span>
+                                </div>
+                                <span className={`text-[0.6rem] font-bold px-2 py-0.5 rounded-full ${
+                                  log.feeling === 'Tốt' ? 'bg-green-50 text-green-600' : log.feeling === 'Bình thường' ? 'bg-orange-50 text-orange-600' : 'bg-red-50 text-red-600'
+                                }`}>
+                                  {log.feeling}
+                                </span>
+                              </div>
+                              <p className="text-sm text-text-main font-medium leading-relaxed">{log.content}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="markdown-body relative z-10">
-                    <Markdown>{selectedRoadmap.roadmap || ''}</Markdown>
+
+                  {/* Tasks Checklist Sidebar */}
+                  <div className="space-y-6 no-print">
+                    <div className="geometric-card sticky top-24">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-2">
+                          <ListChecks className="w-5 h-5 text-primary" />
+                          <h3 className="font-bold text-text-main uppercase tracking-tighter">Nhiệm vụ lộ trình</h3>
+                        </div>
+                        <div className="text-xl font-black text-primary">{calculateProgress()}%</div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 bg-slate-100 rounded-full mb-8 overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${calculateProgress()}%` }}
+                          className="h-full bg-primary"
+                        />
+                      </div>
+
+                      <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                        {selectedRoadmap.tasks && selectedRoadmap.tasks.length > 0 ? (
+                          Array.from(new Set(selectedRoadmap.tasks.map(t => t.week))).sort((a, b) => a - b).map(week => (
+                            <div key={week} className="space-y-3">
+                              <h4 className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.2em] border-l-2 border-primary pl-3">Tuần {week}</h4>
+                              <div className="space-y-2">
+                                {selectedRoadmap.tasks?.filter(t => t.week === week).map(task => (
+                                  <div 
+                                    key={task.id}
+                                    onClick={() => handleToggleTask(task.id)}
+                                    className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
+                                      task.completed ? 'bg-slate-50 border-slate-200' : 'bg-white border-border-main hover:border-primary/50'
+                                    }`}
+                                  >
+                                    <div className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                                      task.completed ? 'bg-success border-success text-white' : 'border-border-main bg-white'
+                                    }`}>
+                                      {task.completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                    </div>
+                                    <span className={`text-[0.75rem] font-medium leading-snug ${task.completed ? 'text-text-sub line-through' : 'text-text-main'}`}>
+                                      {task.content}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8">
+                            <p className="text-xs text-text-sub italic">Lộ trình này chưa có danh sách nhiệm vụ tương tác.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 

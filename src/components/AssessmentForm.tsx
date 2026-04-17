@@ -146,10 +146,16 @@ export default function AssessmentForm({ stage, user, onComplete, onBack }: Prop
       };
 
       // Generate AI Roadmap
-      const roadmap = await generateRoadmap(finalData);
-      finalData.roadmap = roadmap;
+      const aiResponse = await generateRoadmap(finalData);
+      
+      const finalAssessment = {
+        ...finalData,
+        roadmap: aiResponse.roadmap,
+        tasks: aiResponse.tasks || [],
+        learningLogs: []
+      };
 
-      await addDoc(collection(db, 'assessments'), finalData);
+      await addDoc(collection(db, 'assessments'), finalAssessment);
       onComplete();
     } catch (error) {
       console.error("Error submitting assessment:", error);
