@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy, writeBatch } from 'firebase/firestore';
 import { UserProfile, AssessmentData } from '../types';
-import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2 } from 'lucide-react';
+import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 
 interface Props {
+  user: UserProfile;
   onBack: () => void;
 }
 
-export default function TeacherDashboard({ onBack }: Props) {
+export default function TeacherDashboard({ user, onBack }: Props) {
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<UserProfile | null>(null);
   const [studentAssessments, setStudentAssessments] = useState<AssessmentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -34,6 +36,32 @@ export default function TeacherDashboard({ onBack }: Props) {
 
     fetchStudents();
   }, []);
+
+  const handleClearAllGlobalHistory = async () => {
+    if (!confirm("CẢNH BÁO QUAN TRỌNG: Bạn đang thực hiện xóa TOÀN BỘ lộ trình của TẤT CẢ học sinh trong hệ thống. Hành động này không thể hoàn tác. Bạn có chắc chắn muốn tiếp tục?")) return;
+    
+    setClearing(true);
+    try {
+      const snapshot = await getDocs(collection(db, 'assessments'));
+      const batch = writeBatch(db);
+      
+      // Firestore batch limit is 500. For simplified demo we loop if more, but here we just process one batch.
+      snapshot.docs.forEach(d => {
+        batch.delete(d.ref);
+      });
+      
+      await batch.commit();
+      alert("Đã xóa sạch toàn bộ dữ liệu lộ trình trên hệ thống.");
+      if (selectedStudent) {
+        setStudentAssessments([]);
+      }
+    } catch (error) {
+      console.error("Error clearing global history:", error);
+      alert("Có lỗi xảy ra khi xóa dữ liệu. Vui lòng kiểm tra quyền quản trị.");
+    } finally {
+      setClearing(false);
+    }
+  };
 
   const handleViewStudent = async (student: UserProfile) => {
     setSelectedStudent(student);
@@ -84,13 +112,25 @@ export default function TeacherDashboard({ onBack }: Props) {
                 <h1 className="text-2xl font-bold text-text-main tracking-tight">Quản lý học sinh</h1>
                 <p className="text-sm text-text-sub">Theo dõi lộ trình ôn tập của các em học sinh lớp 12.</p>
               </div>
-              <button 
-                onClick={onBack}
-                className="flex items-center gap-2 px-4 py-2 bg-bg-main hover:bg-slate-200 text-text-sub rounded-lg text-sm font-bold transition-colors self-start border border-border-main uppercase tracking-wider"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Quay lại
-              </button>
+              <div className="flex items-center gap-3 self-start">
+                {user.email === 'minhkhoiklk@gmail.com' && (
+                  <button 
+                    onClick={handleClearAllGlobalHistory}
+                    disabled={clearing}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-black transition-colors border border-red-200 uppercase tracking-wider"
+                  >
+                    {clearing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                    Xóa sạch dữ liệu hệ thống
+                  </button>
+                )}
+                <button 
+                  onClick={onBack}
+                  className="flex items-center gap-2 px-4 py-2 bg-bg-main hover:bg-slate-200 text-text-sub rounded-lg text-sm font-bold transition-colors border border-border-main uppercase tracking-wider"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Quay lại
+                </button>
+              </div>
             </div>
 
             <div className="geometric-card !p-4 flex items-center gap-3">
