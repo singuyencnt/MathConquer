@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { db } from '../firebase';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, getDocs, deleteDoc, doc, writeBatch } from 'firebase/firestore';
 import { UserProfile, AssessmentData } from '../types';
 import Markdown from 'react-markdown';
-import { ChevronLeft, Download, Calendar, Target, Clock, Sparkles, Loader2, History, CheckCircle2, FileText, Printer, GraduationCap } from 'lucide-react';
+import { ChevronLeft, Download, Calendar, Target, Clock, Sparkles, Loader2, History, CheckCircle2, FileText, Printer, GraduationCap, Trash2, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -18,6 +18,7 @@ export default function RoadmapView({ user, onBack }: Props) {
   const [selectedRoadmap, setSelectedRoadmap] = useState<AssessmentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const roadmapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -90,6 +91,48 @@ export default function RoadmapView({ user, onBack }: Props) {
     }
   };
 
+  const handleClearHistory = async () => {
+    if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử lộ trình của mình? Hành động này không thể hoàn tác.")) return;
+    
+    setClearing(true);
+    try {
+      const q = query(collection(db, 'assessments'), where('userId', '==', user.uid));
+      const snapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(d => {
+        batch.delete(d.ref);
+      });
+      await batch.commit();
+      setHistory([]);
+      setSelectedRoadmap(null);
+    } catch (error) {
+      console.error("Error clearing history:", error);
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const handleClearAllGlobalHistory = async () => {
+    if (!confirm("CHÚ Ý: Bạn đang thực hiện xóa TOÀN BỘ lộ trình của TẤT CẢ người dùng trong hệ thống. Tiếp tục?")) return;
+    
+    setClearing(true);
+    try {
+      const snapshot = await getDocs(collection(db, 'assessments'));
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(d => {
+        batch.delete(d.ref);
+      });
+      await batch.commit();
+      setHistory([]);
+      setSelectedRoadmap(null);
+      alert("Đã xóa sạch dữ liệu hệ thống.");
+    } catch (error) {
+      console.error("Error clearing global history:", error);
+    } finally {
+      setClearing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
@@ -149,6 +192,27 @@ export default function RoadmapView({ user, onBack }: Props) {
                 <div className="text-[0.65rem] text-text-sub italic">Mục tiêu: {item.targetScore}đ</div>
               </button>
             ))}
+          </div>
+
+          <div className="pt-6 mt-6 border-t border-border-main flex flex-col gap-2">
+            <button
+              onClick={handleClearHistory}
+              disabled={clearing}
+              className="flex items-center justify-center gap-2 w-full py-2.5 text-[0.65rem] font-bold text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+            >
+              {clearing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+              XÓA LỊCH SỬ CỦA TÔI
+            </button>
+            {user.email === 'minhkhoiklk@gmail.com' && (
+              <button
+                onClick={handleClearAllGlobalHistory}
+                disabled={clearing}
+                className="flex items-center justify-center gap-2 w-full py-2.5 text-[0.65rem] font-black text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors border border-red-700"
+              >
+                {clearing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                XÓA SẠCH DỮ LIỆU CẢ HỆ THỐNG
+              </button>
+            )}
           </div>
         </div>
 
@@ -262,11 +326,11 @@ export default function RoadmapView({ user, onBack }: Props) {
                 </div>
 
                 {/* Scientific Disclaimer & Encouragement */}
-                <div className="bg-bg-main border border-border-main rounded-2xl p-8 flex flex-col md:flex-row items-center gap-8">
+                <div className="bg-bg-main border border-border-main rounded-2xl p-8 flex flex-col md:flex-row items-center gap-8 no-print">
                   <div className="w-20 h-20 rounded-2xl bg-white border border-border-main shadow-sm flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-10 h-10 text-success" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-black text-text-main uppercase tracking-tight text-lg mb-2">Cam kết thực hiện</h4>
                     <p className="text-sm text-text-sub leading-relaxed font-medium">
                       Lộ trình này được tính toán dựa trên thuật toán AI bám sát dữ liệu năng lực thực tế của bạn. 
@@ -274,6 +338,15 @@ export default function RoadmapView({ user, onBack }: Props) {
                       Hãy tin tưởng vào bản thân và người đồng hành MATHCONQUER!
                     </p>
                   </div>
+                  <a 
+                    href="https://singuyencnt.github.io/On_tap_toan_THPT/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-primary hover:bg-blue-700 text-white font-black py-4 px-8 rounded-xl shadow-xl shadow-blue-100 transition-all uppercase tracking-widest text-sm flex items-center gap-3 shrink-0"
+                  >
+                    Bắt đầu ôn tập
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
                 </div>
               </div>
             </motion.div>

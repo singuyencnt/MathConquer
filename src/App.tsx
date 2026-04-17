@@ -276,7 +276,7 @@ export default function App() {
             <p className="text-[0.65rem] font-bold text-text-sub uppercase tracking-widest mb-2">Hỗ trợ 24/7</p>
             <p className="text-xs text-text-main font-medium mb-3">Gặp khó khăn khi sử dụng? Liên hệ giáo viên ngay.</p>
             <button 
-              onClick={() => window.location.href = 'mailto:honghue1908@gmail.com;nguyentran.cnt@gmail.com?subject=Hỗ trợ ứng dụng MATHCONQUER'}
+              onClick={() => window.open('mailto:honghue1908@gmail.com,nguyentran.cnt@gmail.com?subject=Hỗ trợ ứng dụng MATHCONQUER', '_blank')}
               className="w-full py-2 bg-white border border-border-main rounded-lg text-[0.7rem] font-bold uppercase tracking-wider hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
             >
               <Mail className="w-3 h-3" />
