@@ -37,19 +37,19 @@ export async function generateRoadmap(assessmentData: any) {
     
     Đầu ra phải là một đối tượng JSON có cấu trúc như sau:
     {
-      "roadmap": "nội dung lộ trình chi tiết bằng Markdown...",
+      "roadmap": "Nội dung lộ trình CỰC KỲ CHI TIẾT bằng Markdown. Bao gồm: Lời chào, Chia nhỏ từng tuần, Phân bổ chi tiết số lượng câu hỏi cho từng chuyên đề (ví dụ: 'Tuần 1: Ôn tập Đạo hàm - Thực hiện 15 câu trắc nghiệm mức Hiểu...'), Lời khuyên vượt qua rào cản, và kết luận khích lệ. Hãy giữ phong cách thân thiện 'mình' - 'bạn'.",
       "tasks": [
         {
-          "id": "chuỗi định danh duy nhất",
-          "content": "Nội dung nhiệm vụ cụ thể (Ví dụ: Làm 10 câu trắc nghiệm chủ đề Tọa độ không gian mức Biết)",
+          "id": "chuỗi định danh duy nhất (ví dụ: w1_task1)",
+          "content": "Nội dung nhiệm vụ cụ thể và ngắn gọn để học sinh đánh dấu (Ví dụ: Làm 10 câu trắc nghiệm chủ đề Tọa độ không gian mức Biết)",
           "week": 1,
           "completed": false
         },
-        ... (liệt kê ít nhất 3-5 nhiệm vụ cụ thể mỗi tuần)
+        ... (liệt kê ít nhất 4-6 nhiệm vụ cụ thể cho MỖI TUẦN để học sinh có thể theo dõi tiến độ chi tiết)
       ]
     }
 
-    Hãy đảm bảo các nhiệm vụ trong danh sách "tasks" bám sát nội dung trong "roadmap".
+    Hãy đảm bảo trường 'roadmap' chứa đầy đủ thông tin chi tiết và lời khuyên như trước đây, còn trường 'tasks' là các gạch đầu dòng nhiệm vụ để giám sát.
   `;
 
   try {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, getDocs, query, where, orderBy, writeBatch } from 'firebase/firestore';
 import { UserProfile, AssessmentData } from '../types';
-import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, AlertTriangle, ListChecks, MessageSquare, Smile, Meh, Frown } from 'lucide-react';
+import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, AlertTriangle, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 
@@ -235,63 +235,96 @@ export default function TeacherDashboard({ user, onBack }: Props) {
                       </div>
                     </div>
                     <div className="p-8 md:p-10">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2 space-y-6">
-                          <div className="markdown-body border border-border-main p-8 rounded-2xl bg-white">
-                            <Markdown>{assessment.roadmap || ''}</Markdown>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-6">
-                          {/* Progress Monitoring for Teacher */}
-                          <div className="bg-slate-50 p-6 rounded-2xl border border-border-main scroll-mt-20">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-2">
-                                <ListChecks className="w-4 h-4 text-primary" />
-                                <h4 className="text-[0.65rem] font-black text-text-main uppercase tracking-widest">Tiến độ lộ trình</h4>
-                              </div>
-                              <span className="text-lg font-black text-primary">{calculateStudentProgress(assessment)}%</span>
-                            </div>
-                            <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mb-6">
-                              <motion.div 
+                      <div className="space-y-8">
+                        {/* Summary & Progress Header */}
+                        <div className="bg-slate-50 border border-border-main p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+                           <div className="flex items-center gap-4">
+                             <div className="w-16 h-16 bg-white border border-border-main rounded-xl flex items-center justify-center text-primary text-2xl font-black shadow-sm">
+                                {calculateStudentProgress(assessment)}%
+                             </div>
+                             <div>
+                               <h4 className="text-sm font-black text-text-main uppercase tracking-tight">Tiến độ tổng thể</h4>
+                               <p className="text-xs text-text-sub font-medium">Dựa trên danh sách nhiệm vụ AI thiết lập</p>
+                             </div>
+                           </div>
+                           <div className="w-full md:w-64 h-2 bg-white border border-border-main rounded-full overflow-hidden">
+                             <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${calculateStudentProgress(assessment)}%` }}
                                 className="h-full bg-primary"
-                              />
+                             />
+                           </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                          <div className="xl:col-span-2 space-y-8">
+                            {/* Roadmap Detailed View */}
+                            <div className="markdown-body border border-border-main p-8 md:p-12 rounded-2xl bg-white shadow-sm">
+                              <Markdown>{assessment.roadmap || ''}</Markdown>
                             </div>
-                            <p className="text-[0.65rem] text-text-sub font-medium italic">Tỷ lệ hoàn thành dựa trên danh sách nhiệm vụ AI đã thiết lập.</p>
+
+                            {/* Integrated Task List Monitoring */}
+                            <div className="bg-slate-50 border border-border-main p-8 rounded-2xl">
+                               <div className="flex items-center gap-3 mb-6">
+                                 <ListChecks className="w-5 h-5 text-primary" />
+                                 <h4 className="font-bold text-text-main uppercase tracking-tight">Chi tiết nhiệm vụ đã giao</h4>
+                               </div>
+                               <div className="space-y-8">
+                                  {Array.from(new Set(assessment.tasks?.map(t => t.week))).sort((a, b) => (a || 0) - (b || 0)).map(week => (
+                                    <div key={week} className="space-y-3">
+                                      <h5 className="text-[0.65rem] font-black text-text-sub uppercase tracking-widest pl-3 border-l-2 border-primary">Tuần {week}</h5>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {assessment.tasks?.filter(t => t.week === week).map(task => (
+                                          <div key={task.id} className={`p-3 rounded-lg border flex items-start gap-3 ${task.completed ? 'bg-green-50/50 border-green-200' : 'bg-white border-border-main'}`}>
+                                            <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${task.completed ? 'bg-success border-success text-white' : 'border-border-main'}`}>
+                                              {task.completed && <CheckCircle2 className="w-3 h-3" />}
+                                            </div>
+                                            <span className={`text-[0.7rem] font-medium leading-tight ${task.completed ? 'text-green-700' : 'text-text-main'}`}>
+                                              {task.content}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                               </div>
+                            </div>
                           </div>
 
-                          {/* Student Logs for Teacher */}
-                          <div className="bg-slate-50 p-6 rounded-2xl border border-border-main">
-                            <div className="flex items-center gap-2 mb-4">
-                              <MessageSquare className="w-4 h-4 text-primary" />
-                              <h4 className="text-[0.65rem] font-black text-text-main uppercase tracking-widest">Nhật ký của em</h4>
-                            </div>
-                            
-                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                              {assessment.learningLogs && assessment.learningLogs.length > 0 ? (
-                                assessment.learningLogs.slice().reverse().map((log) => (
-                                  <div key={log.id} className="p-3 bg-white border border-border-main rounded-xl">
-                                    <div className="flex items-center justify-between mb-1">
-                                      <div className="flex items-center gap-1.5">
-                                        {log.feeling === 'Tốt' ? <Smile className="w-3 h-3 text-success" /> : log.feeling === 'Bình thường' ? <Meh className="w-3 h-3 text-accent" /> : <Frown className="w-3 h-3 text-red-500" />}
-                                        <span className="text-[0.55rem] font-bold text-text-sub uppercase">
-                                          {new Date(log.date?.toDate?.() || log.date).toLocaleDateString('vi-VN')}
+                          <div className="space-y-6">
+                            {/* Student Logs for Teacher */}
+                            <div className="bg-white p-6 rounded-2xl border border-border-main shadow-sm sticky top-8">
+                              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-border-main">
+                                <MessageSquare className="w-5 h-5 text-primary" />
+                                <h4 className="text-[0.7rem] font-black text-text-main uppercase tracking-widest">Nhật ký học tập</h4>
+                              </div>
+                              
+                              <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
+                                {assessment.learningLogs && assessment.learningLogs.length > 0 ? (
+                                  assessment.learningLogs.slice().reverse().map((log) => (
+                                    <div key={log.id} className="p-4 bg-slate-50 border border-border-main rounded-xl hover:border-primary/20 transition-all">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                          {log.feeling === 'Tốt' ? <Smile className="w-3 h-3 text-success" /> : log.feeling === 'Bình thường' ? <Meh className="w-3 h-3 text-accent" /> : <Frown className="w-3 h-3 text-red-500" />}
+                                          <span className="text-[0.55rem] font-bold text-text-sub uppercase">
+                                            {new Date(log.date?.toDate?.() || log.date).toLocaleDateString('vi-VN')}
+                                          </span>
+                                        </div>
+                                        <span className={`text-[0.5rem] font-bold px-1.5 py-0.5 rounded-full ${
+                                          log.feeling === 'Tốt' ? 'bg-green-100 text-green-700' : log.feeling === 'Bình thường' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                                        }`}>
+                                          {log.feeling}
                                         </span>
                                       </div>
-                                      <span className={`text-[0.5rem] font-bold px-1.5 py-0.5 rounded-full ${
-                                        log.feeling === 'Tốt' ? 'bg-green-50 text-green-600' : log.feeling === 'Bình thường' ? 'bg-orange-50 text-orange-600' : 'bg-red-50 text-red-600'
-                                      }`}>
-                                        {log.feeling}
-                                      </span>
+                                      <p className="text-[0.75rem] text-text-main font-medium leading-relaxed">{log.content}</p>
                                     </div>
-                                    <p className="text-[0.7rem] text-text-main font-medium leading-relaxed">{log.content}</p>
+                                  ))
+                                ) : (
+                                  <div className="text-center py-10">
+                                    <p className="text-xs text-text-sub italic">Học sinh chưa bắt đầu ghi nhật ký.</p>
                                   </div>
-                                ))
-                              ) : (
-                                <p className="text-[0.65rem] text-text-sub italic text-center py-4">Học sinh chưa ghi nhật ký.</p>
-                              )}
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
