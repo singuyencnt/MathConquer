@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously } from 'firebase/auth';
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { UserProfile, Role, AssessmentData } from './types';
 import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare } from 'lucide-react';
@@ -46,30 +46,44 @@ export default function App() {
     }
   }, [user, view]);
 
+  // Redirect teachers to dashboard by default if they are on home
+  useEffect(() => {
+    if (user?.role === 'teacher' && view === 'home') {
+      setView('dashboard');
+    }
+  }, [user, view]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      // If we are currently a guest, don't let a null firebase user clear the session
-      // We check the specific ID 'bgk-guest-id' which is only set by handleGuestLogin
       if (firebaseUser) {
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
-          setUser(userDoc.data() as UserProfile);
+          const userData = userDoc.data() as UserProfile;
+          // Ensure correct role if it's the default admin email
+          if (firebaseUser.email === 'minhkhoiklk@gmail.com' && userData.role !== 'teacher') {
+            const updatedUser = { ...userData, role: 'teacher' as const };
+            await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
+            setUser(updatedUser);
+          } else {
+            setUser(userData);
+          }
         } else {
           // New user registration
+          const isGuestAdmin = firebaseUser.isAnonymous;
           const isDefaultAdmin = firebaseUser.email === 'minhkhoiklk@gmail.com';
+          
           const newUser: UserProfile = {
             uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            fullName: firebaseUser.displayName || 'Học sinh',
-            role: isDefaultAdmin ? 'teacher' : 'student',
+            email: firebaseUser.email || (isGuestAdmin ? 'admin@demo.app' : ''),
+            fullName: isGuestAdmin ? 'Quản trị viên (Demo)' : (firebaseUser.displayName || 'Học sinh'),
+            role: (isDefaultAdmin || isGuestAdmin) ? 'teacher' : 'student',
             createdAt: serverTimestamp(),
           };
           await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
           setUser(newUser);
         }
       } else {
-        // Only clear if not in guest mode
-        setUser(prev => prev?.uid === 'bgk-guest-id' ? prev : null);
+        setUser(null);
       }
       setLoading(false);
     });
@@ -80,6 +94,8 @@ export default function App() {
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
+      // Clear flag just in case
+      sessionStorage.removeItem('isGuestAdmin');
       await signInWithPopup(auth, provider);
     } catch (error) {
       console.error("Login failed:", error);
@@ -89,31 +105,28 @@ export default function App() {
   const [showGuestLogin, setShowGuestLogin] = useState(false);
   const [accessCode, setAccessCode] = useState('');
 
-  const handleGuestLogin = () => {
+  const handleGuestLogin = async () => {
     // Secret code only GV knows
     if (accessCode === 'Admin') {
-      const guestUser: UserProfile = {
-        uid: 'bgk-guest-id',
-        email: 'admin@mathconquer.demo',
-        fullName: 'Quản trị viên (Demo)',
-        role: 'teacher',
-        createdAt: new Date(),
-      };
-      setUser(guestUser);
-      setLoading(false);
-      setShowGuestLogin(false);
-      setAccessCode('');
+      try {
+        setLoading(true);
+        sessionStorage.setItem('isGuestAdmin', 'true');
+        await signInAnonymously(auth);
+        setShowGuestLogin(false);
+        setAccessCode('');
+      } catch (error) {
+        console.error("Guest login failed:", error);
+        alert("Có lỗi xảy ra khi đăng nhập Demo.");
+        setLoading(false);
+      }
     } else {
       alert("Mã truy cập không chính xác!");
     }
   };
 
   const handleLogout = () => {
-    if (user?.uid === 'bgk-guest-id') {
-      setUser(null);
-    } else {
-      signOut(auth);
-    }
+    sessionStorage.removeItem('isGuestAdmin');
+    signOut(auth);
   };
 
   if (loading) {

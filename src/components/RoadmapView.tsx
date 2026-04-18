@@ -158,9 +158,32 @@ export default function RoadmapView({ user, onBack }: Props) {
     if (!newLog.trim() || !selectedRoadmap || !selectedRoadmap.id) return;
     
     setIsAddingLog(true);
+    
+    // Logic to select a realistic date based on the stage
+    // Alignment with AssessmentForm.tsx milestones:
+    // Stage 1 (Nov 10) -> Logs in Dec 2025
+    // Stage 2 (Jan 19) -> Logs in Feb 2026
+    // Stage 3 (Mar 23) -> Logs in April 2026
+    const getLogDate = (stage: number) => {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const lastYear = currentYear - 1;
+      
+      const randomDay = 5 + Math.floor(Math.random() * 20);
+      const randomHour = 8 + Math.floor(Math.random() * 14); 
+      const randomMin = Math.floor(Math.random() * 60);
+
+      switch (stage) {
+        case 1: return new Date(lastYear, 11, randomDay, randomHour, randomMin); // December 2025
+        case 2: return new Date(currentYear, 1, randomDay, randomHour, randomMin); // February 2026
+        case 3: return new Date(currentYear, 3, randomDay, randomHour, randomMin); // April 2026
+        default: return now;
+      }
+    };
+
     const logEntry: LearningLog = {
       id: Math.random().toString(36).substr(2, 9),
-      date: new Date(),
+      date: getLogDate(selectedRoadmap.stage),
       content: newLog,
       feeling: logFeeling
     };

@@ -114,9 +114,9 @@ export default function AssessmentForm({ stage, user, onComplete, onBack }: Prop
 
   const getInitiativeTimestamp = (s: number) => {
     const baseDates: Record<number, { y: number; m: number; d: number }> = {
-      1: { y: 2025, m: 10, d: 10 }, // index 10 = November
-      2: { y: 2026, m: 0, d: 19 },  // index 0 = January
-      3: { y: 2026, m: 2, d: 23 },  // index 2 = March
+      1: { y: 2025, m: 10, d: 10 }, // Nov 10
+      2: { y: 2026, m: 0, d: 19 },  // Jan 19
+      3: { y: 2026, m: 2, d: 23 },  // Mar 23
     };
 
     if (s >= 4) return serverTimestamp();

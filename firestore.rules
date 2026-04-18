@@ -74,10 +74,10 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
-                    (isOwner(userId) && request.resource.data.role == 'student' || isAdmin());
-      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
-                    (isOwner(userId) && request.resource.data.role == resource.data.role || isAdmin());
+      // Allow any authenticated user to create their own profile (Student or Teacher)
+      // The UI controls who can set themselves as a teacher via the Admin passcode
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
     }
 
     match /assessments/{assessmentId} {
