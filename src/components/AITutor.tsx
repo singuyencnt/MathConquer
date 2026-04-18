@@ -65,7 +65,7 @@ export default function AITutor({ user, onBack }: AITutorProps) {
 
     try {
       // Send message history + new message to AI
-      const aiResponseContent = await chatWithTutor([...messages, userMessage]);
+      const aiResponseContent = await chatWithTutor([...messages, userMessage], user);
       
       const aiMessage: ChatMessage = {
         role: 'assistant',

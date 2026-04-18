@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { UserProfile } from "../types";
 
 export async function generateRoadmap(assessmentData: any) {
   // Try to get the API key from common environment variable names
@@ -83,7 +84,10 @@ export async function generateRoadmap(assessmentData: any) {
   }
 }
 
-export async function chatWithTutor(messages: { role: 'user' | 'assistant', content: string, imageUrl?: string }[]) {
+export async function chatWithTutor(
+  messages: { role: 'user' | 'assistant', content: string, imageUrl?: string }[],
+  user?: UserProfile | null
+) {
   const apiKey = process.env.GEMINI_API_KEY || 
                  (import.meta as any).env?.VITE_GEMINI_API_KEY || 
                  process.env.VITE_GEMINI_API_KEY;
@@ -118,6 +122,13 @@ export async function chatWithTutor(messages: { role: 'user' | 'assistant', cont
     }
   }
 
+  const studentInfo = user ? `
+    THÔNG TIN HỌC SINH ĐANG CHAT VỚI BẠN:
+    - Họ tên: ${user.fullName}
+    - Lớp: ${user.className || 'Chưa xác định'}
+    - Email: ${user.email}
+  ` : '';
+
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -126,8 +137,10 @@ export async function chatWithTutor(messages: { role: 'user' | 'assistant', cont
         { role: 'user', parts: parts }
       ],
       config: {
-        systemInstruction: `Bạn là "Gia sư ảo AI", một giáo viên Toán lớp 12 tận tâm tại Việt Nam. 
-Học sinh sẽ gửi câu hỏi hoặc hình ảnh bài tập Toán. 
+        systemInstruction: `Bạn là "Gia sư ảo AI", một giáo viên Toán lớp 12 tận tâm tại trường THPT Anh Hùng Núp. 
+${studentInfo}
+Khi trả lời, hãy thỉnh thoảng nhắc tên học sinh (ví dụ: "Chào ${user?.fullName || 'bạn'}...", "Cố lên ${user?.fullName || 'bạn'} nhé...") để tạo sự gần gũi.
+
 Nhiệm vụ của bạn:
 1. Đừng đưa ra đáp án cuối cùng ngay lập tức.
 2. Hãy đóng vai trò người hướng dẫn: Gợi mở hướng tư duy, nêu phương pháp giải chung.
