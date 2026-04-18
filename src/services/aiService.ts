@@ -120,7 +120,7 @@ export async function chatWithTutor(messages: { role: 'user' | 'assistant', cont
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-pro-preview",
+      model: "gemini-3-flash-preview",
       contents: [
         ...history,
         { role: 'user', parts: parts }
