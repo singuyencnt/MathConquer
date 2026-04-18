@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Upload, User, Bot, Loader2, X, MessageSquare, BookOpen, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { UserProfile, ChatMessage } from '../types';
 import { chatWithTutor } from '../services/aiService';
 
@@ -137,7 +139,12 @@ export default function AITutor({ user, onBack }: AITutorProps) {
                       </div>
                     )}
                     <div className="markdown-body prose prose-sm max-w-none">
-                      <Markdown>{msg.content}</Markdown>
+                      <Markdown 
+                        remarkPlugins={[remarkMath]} 
+                        rehypePlugins={[rehypeKatex]}
+                      >
+                        {msg.content}
+                      </Markdown>
                     </div>
                   </div>
                   <span className="text-[0.6rem] font-bold text-text-sub uppercase tracking-widest px-1">
