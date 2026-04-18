@@ -1,5 +1,13 @@
 export type Role = 'student' | 'teacher';
 
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: any;
+  type: 'text' | 'image';
+  imageUrl?: string;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;

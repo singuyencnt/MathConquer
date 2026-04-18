@@ -8,16 +8,17 @@ import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { UserProfile, Role, AssessmentData } from './types';
-import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle } from 'lucide-react';
+import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AssessmentForm from './components/AssessmentForm';
 import TeacherDashboard from './components/TeacherDashboard';
 import RoadmapView from './components/RoadmapView';
+import AITutor from './components/AITutor';
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'home' | 'assessment' | 'roadmap' | 'dashboard'>('home');
+  const [view, setView] = useState<'home' | 'assessment' | 'roadmap' | 'dashboard' | 'aitutor'>('home');
   const [selectedStage, setSelectedStage] = useState<number>(1);
   const [latestAssessment, setLatestAssessment] = useState<AssessmentData | null>(null);
 
@@ -249,7 +250,7 @@ export default function App() {
             <LayoutDashboard className="w-4 h-4" />
             Tổng quan
           </li>
-          {user.role === 'student' && (
+            {user.role === 'student' && (
             <>
               <li 
                 onClick={() => setView('roadmap')}
@@ -257,6 +258,13 @@ export default function App() {
               >
                 <BookOpen className="w-4 h-4" />
                 Lộ trình cá nhân
+              </li>
+              <li 
+                onClick={() => setView('aitutor')}
+                className={`px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-3 ${view === 'aitutor' ? 'bg-primary text-white shadow-md' : 'text-text-sub hover:bg-bg-main'}`}
+              >
+                <Bot className="w-4 h-4" />
+                Gia sư ảo AI
               </li>
             </>
           )}
@@ -282,7 +290,8 @@ export default function App() {
             <h1 className="text-xl font-bold tracking-tight text-text-main uppercase">
               {view === 'home' ? 'Hệ thống học tập' : 
                view === 'assessment' ? `Đánh giá Giai đoạn ${selectedStage}` : 
-               view === 'roadmap' ? 'Lộ trình cá nhân' : 'Quản lý học sinh'}
+               view === 'roadmap' ? 'Lộ trình cá nhân' : 
+               view === 'aitutor' ? 'Gia sư ảo AI' : 'Quản lý học sinh'}
             </h1>
           </div>
 
@@ -342,6 +351,29 @@ export default function App() {
                     <GraduationCap className="w-48 h-48 text-white/10 relative z-10 rotate-12" />
                   </div>
                 </section>
+
+                {/* Quick Access AI Tutor */}
+                {user.role === 'student' && (
+                  <section className="bg-white border border-border-main rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+                    <div className="w-20 h-20 bg-stage-bg rounded-2xl flex items-center justify-center shrink-0 border border-primary/10">
+                      <Bot className="w-10 h-10 text-primary" />
+                    </div>
+                    <div className="flex-1 text-center md:text-left">
+                      <h3 className="font-black text-text-main uppercase tracking-tight text-lg mb-2">Gia sư ảo AI - Hỗ trợ giải bài tập</h3>
+                      <p className="text-sm text-text-sub font-medium leading-relaxed">
+                        Chụp ảnh đề bài hoặc nhập câu hỏi, Gia sư AI sẽ hướng dẫn bạn phương pháp giải chi tiết, 
+                        nhắc lại kiến thức lý thuyết liên quan để bạn tự tin chinh phục mọi bài toán 12.
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setView('aitutor')}
+                      className="bg-primary text-white font-black py-4 px-8 rounded-xl hover:bg-blue-700 transition-all uppercase tracking-widest text-xs flex items-center gap-3 whitespace-nowrap shadow-lg shadow-blue-100"
+                    >
+                      Bắt đầu chat ngay
+                      <MessageSquare className="w-4 h-4" />
+                    </button>
+                  </section>
+                )}
 
                 {/* Stages Tabs Section */}
                 <section className="space-y-8">
@@ -456,6 +488,13 @@ export default function App() {
               <TeacherDashboard 
                 user={user}
                 onBack={() => setView('home')} 
+              />
+            )}
+
+            {view === 'aitutor' && (
+              <AITutor 
+                user={user}
+                onBack={() => setView('home')}
               />
             )}
           </AnimatePresence>

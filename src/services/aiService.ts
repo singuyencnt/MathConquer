@@ -1,12 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 
 export async function generateRoadmap(assessmentData: any) {
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Try to get the API key from common environment variable names
+  const apiKey = process.env.GEMINI_API_KEY || 
+                 (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+                 process.env.VITE_GEMINI_API_KEY;
   
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'undefined') {
     console.error("GEMINI_API_KEY is not defined in the environment.");
     return { 
-      roadmap: "Lỗi: Chưa cấu hình API Key cho AI. Vui lòng kiểm tra cài đặt Secrets.", 
+      roadmap: "Chưa cấu hình API Key cho AI. Nếu bạn đang chạy trên Vercel, hãy đảm bảo đã thêm biến môi trường GEMINI_API_KEY (hoặc VITE_GEMINI_API_KEY). Nếu đang chạy trong bộ soạn thảo này, hãy kiểm tra phần cài đặt Secrets.", 
       tasks: [] 
     };
   }
@@ -77,5 +80,68 @@ export async function generateRoadmap(assessmentData: any) {
       roadmap: `Lỗi: ${errorMessage}`, 
       tasks: [] 
     };
+  }
+}
+
+export async function chatWithTutor(messages: { role: 'user' | 'assistant', content: string, imageUrl?: string }[]) {
+  const apiKey = process.env.GEMINI_API_KEY || 
+                 (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+                 process.env.VITE_GEMINI_API_KEY;
+  
+  if (!apiKey || apiKey === 'undefined') {
+    return "Lỗi: Chưa cấu hình API Key.";
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+  
+  // Format history for Gemini
+  const history = messages.slice(0, -1).map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.content }]
+  }));
+
+  const lastMessage = messages[messages.length - 1];
+  const parts: any[] = [{ text: lastMessage.content }];
+
+  if (lastMessage.imageUrl) {
+    try {
+      const base64Data = lastMessage.imageUrl.split(',')[1];
+      const mimeType = lastMessage.imageUrl.split(',')[0].split(':')[1].split(';')[0];
+      parts.push({
+        inlineData: {
+          data: base64Data,
+          mimeType: mimeType
+        }
+      });
+    } catch (e) {
+      console.error("Image parsing error:", e);
+    }
+  }
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: [
+        ...history,
+        { role: 'user', parts: parts }
+      ],
+      config: {
+        systemInstruction: `Bạn là "Gia sư ảo AI", một giáo viên Toán lớp 12 tận tâm tại Việt Nam. 
+Học sinh sẽ gửi câu hỏi hoặc hình ảnh bài tập Toán. 
+Nhiệm vụ của bạn:
+1. Đừng đưa ra đáp án cuối cùng ngay lập tức.
+2. Hãy đóng vai trò người hướng dẫn: Gợi mở hướng tư duy, nêu phương pháp giải chung.
+3. Chỉ dẫn học sinh xem lại các kiến thức, công thức liên quan (ví dụ: "Bạn nên xem lại công thức tính đạo hàm của hàm hợp...").
+4. Giải thích từng bước một cách sư phạm nếu học sinh vẫn chưa hiểu.
+5. Luôn khích lệ học sinh tự giải.
+6. Xưng hô "mình" và "bạn" thân thiện.
+7. Sử dụng định dạng Markdown cho các công thức Toán học để hiển thị đẹp mắt (dùng $...$ cho inline và $$...$$ cho block).`
+      }
+    });
+
+    return response.text || "Mình xin lỗi, mình không tìm thấy câu trả lời.";
+  } catch (error) {
+    console.error("Tutor error:", error);
+    return "Đã có lỗi xảy ra khi kết nối với Gia sư AI. Bạn hãy thử lại sau nhé.";
   }
 }
