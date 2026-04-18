@@ -48,6 +48,8 @@ export default function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // If we are currently a guest, don't let a null firebase user clear the session
+      // We check the specific ID 'bgk-guest-id' which is only set by handleGuestLogin
       if (firebaseUser) {
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
@@ -66,7 +68,8 @@ export default function App() {
           setUser(newUser);
         }
       } else {
-        setUser(null);
+        // Only clear if not in guest mode
+        setUser(prev => prev?.uid === 'bgk-guest-id' ? prev : null);
       }
       setLoading(false);
     });
@@ -83,7 +86,35 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => signOut(auth);
+  const [showGuestLogin, setShowGuestLogin] = useState(false);
+  const [accessCode, setAccessCode] = useState('');
+
+  const handleGuestLogin = () => {
+    // Secret code only GV knows
+    if (accessCode === 'Admin') {
+      const guestUser: UserProfile = {
+        uid: 'bgk-guest-id',
+        email: 'admin@mathconquer.demo',
+        fullName: 'Quản trị viên (Demo)',
+        role: 'teacher',
+        createdAt: new Date(),
+      };
+      setUser(guestUser);
+      setLoading(false);
+      setShowGuestLogin(false);
+      setAccessCode('');
+    } else {
+      alert("Mã truy cập không chính xác!");
+    }
+  };
+
+  const handleLogout = () => {
+    if (user?.uid === 'bgk-guest-id') {
+      setUser(null);
+    } else {
+      signOut(auth);
+    }
+  };
 
   if (loading) {
     return (
@@ -103,23 +134,88 @@ export default function App() {
         </div>
 
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="geometric-card max-w-md w-full text-center relative z-10"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-4xl w-full relative z-10"
         >
-          <div className="bg-stage-bg w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 rotate-3">
-            <GraduationCap className="w-10 h-10 text-primary" />
+          {/* Logo Section */}
+          <div className="text-center mb-10">
+            <div className="bg-white w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-blue-100 rotate-3 border border-border-main">
+              <GraduationCap className="w-10 h-10 text-primary" />
+            </div>
+            <h1 className="text-4xl font-black text-text-main mb-2 tracking-tighter uppercase">MATHCONQUER</h1>
+            <p className="text-text-sub max-w-lg mx-auto font-medium">Hệ thống xây dựng lộ trình ôn tập Toán 12 cá nhân hóa bằng trí tuệ nhân tạo.</p>
           </div>
-          <h1 className="text-3xl font-bold text-text-main mb-2 tracking-tight">MATHCONQUER</h1>
-          <p className="text-text-sub mb-8 text-sm">Hệ thống xây dựng lộ trình ôn tập Toán 12 cá nhân hóa bằng trí tuệ nhân tạo.</p>
-          <button
-            onClick={handleLogin}
-            className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-100 uppercase tracking-wider text-sm"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-            Bắt đầu ngay với Google
-          </button>
-          <p className="mt-6 text-[0.7rem] text-text-sub uppercase tracking-widest font-bold">Dành riêng cho học sinh lớp 12</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Student Column */}
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="geometric-card !p-8 flex flex-col items-center text-center bg-white border-b-4 border-b-primary"
+            >
+              <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
+                <BookOpen className="w-7 h-7 text-primary" />
+              </div>
+              <h2 className="text-xl font-black text-text-main mb-3 uppercase tracking-tight">Dành cho Học sinh</h2>
+              <p className="text-sm text-text-sub mb-8 leading-relaxed">Đăng nhập để thực hiện khảo sát năng lực, nhận lộ trình cá nhân hóa và bắt đầu học cùng Gia sư AI.</p>
+              
+              <button
+                onClick={handleLogin}
+                className="w-full bg-primary hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 shadow-xl shadow-blue-100 uppercase tracking-wider text-xs"
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+                Đăng nhập ngay
+              </button>
+            </motion.div>
+
+            {/* Teacher Column */}
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="geometric-card !p-8 flex flex-col items-center text-center bg-white border-b-4 border-b-accent"
+            >
+              <div className="w-14 h-14 bg-orange-50 rounded-xl flex items-center justify-center mb-6">
+                <Users className="w-7 h-7 text-accent" />
+              </div>
+              <h2 className="text-xl font-black text-text-main mb-3 uppercase tracking-tight">Dành cho Giáo viên</h2>
+              <p className="text-sm text-text-sub mb-8 leading-relaxed">Quản lý lớp học, theo dõi tiến độ của học sinh và đánh giá hiệu quả của lộ trình học tập.</p>
+              
+              {!showGuestLogin ? (
+                <button
+                  onClick={() => setShowGuestLogin(true)}
+                  className="w-full bg-white border-2 border-accent/20 hover:border-accent text-accent font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 uppercase tracking-wider text-xs"
+                >
+                  <Users className="w-4 h-4" />
+                  Truy cập nhanh (Demo)
+                </button>
+              ) : (
+                <div className="w-full space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <input 
+                    type="password"
+                    placeholder="Nhập mã truy cập..."
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleGuestLogin()}
+                    className="w-full border-2 border-accent/20 rounded-xl px-4 py-4 focus:border-accent outline-none font-bold text-center text-sm tracking-[0.3em] text-accent bg-orange-50/30"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowGuestLogin(false)}
+                      className="flex-1 bg-slate-100 text-text-sub font-bold py-3 rounded-xl uppercase tracking-wider text-[0.65rem]"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      onClick={handleGuestLogin}
+                      className="flex-[2] bg-accent text-white font-bold py-3 rounded-xl uppercase tracking-wider text-[0.65rem] shadow-lg shadow-orange-100"
+                    >
+                      Xác nhận
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
         </motion.div>
       </div>
     );
