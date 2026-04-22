@@ -75,7 +75,10 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         orderBy('createdAt', 'desc')
       );
       const querySnapshot = await getDocs(q);
-      const assessments = querySnapshot.docs.map(doc => doc.data() as AssessmentData);
+      const assessments = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }) as AssessmentData);
       setStudentAssessments(assessments);
     } catch (error) {
       console.error("Error fetching student assessments:", error);
