@@ -96,11 +96,23 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       const assessment = studentAssessments.find(a => a.id === assessmentId);
       if (!assessment) return;
 
-      const updatedLogs = assessment.learningLogs?.map(log => 
-        log.id === logId 
-          ? { ...log, teacherResponse: text, teacherResponseDate: new Date() } 
-          : log
-      ) || [];
+      const updatedLogs = assessment.learningLogs?.map(log => {
+        if (log.id === logId) {
+          let responseDate = new Date();
+          // Logic to randomize response date for back-filled logs (Stage 1, 2, 3)
+          if (assessment.stage < 4) {
+            const logDate = new Date(log.date?.toDate?.() || log.date);
+            // Add 1 to 3 days after the student log date
+            const daysOffset = 1 + Math.floor(Math.random() * 3);
+            const hoursOffset = Math.floor(Math.random() * 12);
+            responseDate = new Date(logDate);
+            responseDate.setDate(logDate.getDate() + daysOffset);
+            responseDate.setHours(8 + hoursOffset, Math.floor(Math.random() * 60));
+          }
+          return { ...log, teacherResponse: text, teacherResponseDate: responseDate };
+        }
+        return log;
+      }) || [];
 
       await updateDoc(doc(db, 'assessments', assessmentId), {
         learningLogs: updatedLogs
