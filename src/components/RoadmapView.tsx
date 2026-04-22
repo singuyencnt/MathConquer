@@ -3,7 +3,7 @@ import { db } from '../firebase';
 import { collection, query, where, orderBy, getDocs, deleteDoc, doc, writeBatch, updateDoc, arrayUnion } from 'firebase/firestore';
 import { UserProfile, AssessmentData, RoadmapTask, LearningLog } from '../types';
 import Markdown from 'react-markdown';
-import { ChevronLeft, Download, Calendar, Target, Clock, Sparkles, Loader2, History, CheckCircle2, FileText, Printer, GraduationCap, Trash2, ExternalLink, ListChecks, MessageSquare, Plus, Smile, Meh, Frown } from 'lucide-react';
+import { ChevronLeft, Download, Calendar, Target, Clock, Sparkles, Loader2, History, CheckCircle2, FileText, Printer, GraduationCap, Trash2, ExternalLink, ListChecks, MessageSquare, Plus, Smile, Meh, Frown, Quote } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -536,6 +536,23 @@ export default function RoadmapView({ user, onBack }: Props) {
                             </span>
                           </div>
                           <p className="text-sm text-text-main font-medium leading-relaxed">{log.content}</p>
+                          
+                          {log.teacherResponse && (
+                            <div className="mt-3 p-4 bg-blue-50 border-l-4 border-primary rounded-r-xl">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Quote className="w-3 h-3 text-primary" />
+                                <span className="text-[0.65rem] font-black text-primary uppercase tracking-widest">Phản hồi từ Giáo viên</span>
+                              </div>
+                              <p className="text-sm text-blue-900 font-bold italic leading-relaxed">
+                                "{log.teacherResponse}"
+                              </p>
+                              <div className="mt-1 text-right">
+                                <span className="text-[0.55rem] text-text-sub font-bold uppercase">
+                                  {log.teacherResponseDate ? new Date(log.teacherResponseDate?.toDate?.() || log.teacherResponseDate).toLocaleDateString('vi-VN') : ''}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

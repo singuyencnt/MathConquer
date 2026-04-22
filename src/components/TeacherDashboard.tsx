@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, getDocs, query, where, orderBy, writeBatch } from 'firebase/firestore';
-import { UserProfile, AssessmentData } from '../types';
-import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, AlertTriangle, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2 } from 'lucide-react';
+import { collection, getDocs, query, where, orderBy, writeBatch, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { UserProfile, AssessmentData, LearningLog } from '../types';
+import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, AlertTriangle, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2, Send, Quote } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 
@@ -19,6 +19,8 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [isReplying, setIsReplying] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -79,6 +81,42 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       console.error("Error fetching student assessments:", error);
     } finally {
       setLoadingDetails(false);
+    }
+  };
+
+  const handleTeacherReply = async (assessmentId: string, logId: string) => {
+    const text = replyText[logId];
+    if (!text?.trim()) return;
+
+    setIsReplying(prev => ({ ...prev, [logId]: true }));
+    try {
+      const assessment = studentAssessments.find(a => a.id === assessmentId);
+      if (!assessment) return;
+
+      const updatedLogs = assessment.learningLogs?.map(log => 
+        log.id === logId 
+          ? { ...log, teacherResponse: text, teacherResponseDate: new Date() } 
+          : log
+      ) || [];
+
+      await updateDoc(doc(db, 'assessments', assessmentId), {
+        learningLogs: updatedLogs
+      });
+
+      setStudentAssessments(prev => prev.map(a => 
+        a.id === assessmentId ? { ...a, learningLogs: updatedLogs } : a
+      ));
+      
+      setReplyText(prev => {
+        const next = { ...prev };
+        delete next[logId];
+        return next;
+      });
+    } catch (error) {
+      console.error("Error replying to log:", error);
+      alert("Không thể gửi phản hồi. Vui lòng thử lại.");
+    } finally {
+      setIsReplying(prev => ({ ...prev, [logId]: false }));
     }
   };
 
@@ -317,6 +355,39 @@ export default function TeacherDashboard({ user, onBack }: Props) {
                                         </span>
                                       </div>
                                       <p className="text-[0.75rem] text-text-main font-medium leading-relaxed">{log.content}</p>
+
+                                      {/* Teacher Response UI */}
+                                      {log.teacherResponse ? (
+                                        <div className="mt-3 p-3 bg-blue-50 border-l-4 border-primary rounded-r-xl">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <Quote className="w-3 h-3 text-primary" />
+                                            <span className="text-[0.6rem] font-black text-primary uppercase tracking-widest">Phản hồi của bạn</span>
+                                            <span className="text-[0.5rem] text-text-sub font-bold ml-auto">
+                                              {log.teacherResponseDate ? new Date(log.teacherResponseDate?.toDate?.() || log.teacherResponseDate).toLocaleDateString('vi-VN') : ''}
+                                            </span>
+                                          </div>
+                                          <p className="text-[0.7rem] text-blue-900 font-medium italic">"{log.teacherResponse}"</p>
+                                        </div>
+                                      ) : (
+                                        <div className="mt-4 pt-3 border-t border-border-main/50 space-y-2">
+                                          <textarea 
+                                            placeholder="Động viên hoặc nhắc nhở học sinh..."
+                                            value={replyText[log.id] || ''}
+                                            onChange={(e) => setReplyText(prev => ({ ...prev, [log.id]: e.target.value }))}
+                                            className="w-full bg-white border border-border-main rounded-lg p-2 text-xs focus:ring-1 focus:ring-primary outline-none min-h-[60px]"
+                                          />
+                                          <div className="flex justify-end">
+                                            <button 
+                                              disabled={!replyText[log.id]?.trim() || isReplying[log.id]}
+                                              onClick={() => handleTeacherReply(assessment.id!, log.id)}
+                                              className="bg-primary text-white p-1.5 rounded-lg hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2 text-[0.65rem] font-bold disabled:opacity-50"
+                                            >
+                                              {isReplying[log.id] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                                              Gửi phản hồi
+                                            </button>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   ))
                                 ) : (

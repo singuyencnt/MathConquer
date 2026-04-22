@@ -29,6 +29,8 @@ export interface LearningLog {
   date: any;
   content: string;
   feeling: 'Tốt' | 'Bình thường' | 'Cần cố gắng';
+  teacherResponse?: string;
+  teacherResponseDate?: any;
 }
 
 export interface AssessmentData {
