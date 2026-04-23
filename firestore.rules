@@ -78,6 +78,7 @@ service cloud.firestore {
       // The UI controls who can set themselves as a teacher via the Admin passcode
       allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data);
       allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
     }
 
     match /assessments/{assessmentId} {

@@ -533,7 +533,7 @@ export default function App() {
                             ))}
                           </div>
 
-                          {user.role === 'student' && (
+                          {(user.role === 'student' || user.role === 'teacher') && (
                             <button
                               onClick={() => setView('assessment')}
                               className="w-fit bg-primary text-white font-bold py-4 px-10 rounded-xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all uppercase tracking-widest text-sm"
