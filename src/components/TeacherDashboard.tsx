@@ -167,139 +167,97 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       const FEELINGS = ['Tốt', 'Bình thường', 'Cần cố gắng'] as const;
       const LOG_TEMPLATES = [
         "Hôm nay em đã ôn tập xong phần lý thuyết và làm được 20 câu trắc nghiệm.",
-        "Phần này hơi khó hiểu, em cần xem thêm video bài giảng của cô.",
-        "Em đã nắm vững các dạng bài tập cơ bản, chuẩn bị sang phần nâng cao rồi ạ.",
-        "Học bài này xong em thấy tự tin hơn hẳn, cảm ơn cô nhé!",
-        "Em vẫn còn nhầm lẫn công thức phần logarit, lần sau em sẽ cẩn thận hơn.",
-        "Hôm nay em dành 2 tiếng để giải đề, kết quả 8.5 làm em rất vui.",
+        "Phần này hơi khó hiểu, em cần xem thêm video bài giảng.",
+        "Em đã nắm vững các dạng bài tập cơ bản, chuẩn bị sang phần nâng cao.",
+        "Học bài này xong em thấy tự tin hơn hẳn.",
+        "Em vẫn còn nhầm lẫn công thức, cần luyện tập thêm nhiều.",
+        "Hôm nay em dành 2 tiếng để giải đề, kết quả khá ổn.",
         "Gia sư AI hướng dẫn rất hiểu bài, em đã tự giải được bài toán vận dụng cao.",
-        "Em đang cố gắng bám sát lộ trình tuần này cô giao.",
-        "Kiến thức về phần Nguyên hàm thật sự rất rộng, nhưng em sẽ không bỏ cuộc.",
-        "Em vừa làm xong đề thi thử chuyên đề Oxyz, đạt 9.0 điểm luôn cô ơi!",
-        "Cảm ơn cô đã nhắc nhở em về các bẫy trong câu hỏi thực tế, em suýt thì sai.",
+        "Em đang cố gắng bám sát lộ trình tuần này.",
+        "Kiến thức về phần này thật sự rất rộng, nhưng em sẽ không bỏ cuộc.",
+        "Em vừa làm xong đề thi thử chuyên đề, đạt 8.5 điểm.",
+        "Cảm ơn Gia sư AI đã nhắc nhở em về các bẫy trong câu hỏi thực tế.",
         "Em thấy mình tiến bộ rõ rệt ở phần bài tập trắc nghiệm trả lời ngắn.",
-        "Học nhóm hôm nay rất vui, chúng em đã giải được nhiều câu khó.",
-        "Đã hoàn thành mục tiêu tuần 2 sớm hơn dự kiến, em sẽ dành thời gian ôn lại.",
-        "Em cần luyện thêm về kỹ năng sử dụng máy tính Casio để bấm tích phân nhanh hơn.",
-        "Một ngày học tập khá mệt nhưng nhìn lại kết quả em thấy rất xứng đáng.",
-        "Em đã hiểu bản chất của đồ thị hàm số sau khi đọc tài liệu cô gửi.",
-        "Cố gắng mỗi ngày một ít, em tin thành công đang đến gần.",
-        "Hôm nay em đã tự vẽ được sơ đồ tư duy cho chương Hàm số, cực kỳ dễ nhớ.",
+        "Hôm nay em học nhóm và cùng các bạn giải quyết được nhiều câu khó.",
+        "Đã hoàn thành mục tiêu tuần 2 sớm hơn dự kiến.",
+        "Em cần luyện thêm về kỹ năng sử dụng máy tính Casio cho phần này.",
+        "Một ngày học tập khá mệt nhưng cảm thấy rất xứng đáng.",
+        "Em đã hiểu bản chất của đồ thị hàm số sau khi đọc tài liệu hướng dẫn.",
+        "Cố gắng mỗi ngày một ít, thành công đang đến gần.",
+        "Hôm nay em đã tự vẽ được sơ đồ tư duy cho chương Hàm số, dễ nhớ hơn hẳn.",
         "Em cảm ơn cô đã động viên, nhờ đó em không còn thấy sợ môn Toán nữa.",
         "Bài tập trắc nghiệm đúng/sai thật thú vị, giúp em hiểu rõ bản chất định lý.",
-        "Em dành cả buổi tối để luyện Oxyz, cuối cùng cũng đã thông suốt rồi cô ạ.",
+        "Em dành cả buổi tối để luyện Oxyz, cuối cùng cũng đã thông suốt.",
         "Gia sư AI gợi ý cách nhìn mới về bài toán khoảng cách, thật sự rất hay.",
-        "Hôm nay em làm sai 3 câu nhưng đã hiểu rõ lỗi của mình, sẽ không lặp lại ạ.",
-        "Mục tiêu 9 điểm môn Toán đang gần hơn bao giờ hết, em sẽ cố gắng hết sức!",
-        "Em thích nhất là phần tài liệu tóm tắt trong ứng dụng, rất cô đọng và dễ hiểu.",
+        "Hôm nay em làm sai 3 câu nhưng đã hiểu rõ nguyên nhân, không tiếc nuối.",
+        "Mục tiêu 9 điểm môn Toán đang gần hơn bao giờ hết, cố lên tôi ơi!",
+        "Em thích nhất là phần tài liệu tóm tắt trong ứng dụng, rất cô đọng.",
         "Hôm nay em tập trung làm các bài toán thực tế, thấy Toán học thật gần gũi.",
-        "Em vừa chinh phục được một dạng bài vận dụng cao mà trước đây em toàn bỏ qua.",
-        "Sáng nay em dậy sớm 1 tiếng để ôn tập công thức, thấy hiệu quả bất ngờ luôn.",
-        "Càng học em càng thấy Toán 12 có nhiều điều thú vị để khám phá, cảm ơn cô!"
+        "Em vừa chinh phục được một dạng bài vận dụng cao mà trước đây em bỏ qua.",
+        "Sáng nay em dậy sớm 1 tiếng để ôn tập công thức, thấy hiệu quả bất ngờ.",
+        "Càng học em càng thấy Toán 12 có nhiều điều thú vị để khám phá."
       ];
 
       const generateRichRoadmap = (stage: number, student: UserProfile, assessment: Partial<AssessmentData>) => {
+        const duration = assessment.durationWeeks || 4;
         const topics = STAGE_TOPICS[stage as 1|2|3].map(idx => TOPICS[idx]);
         const score = assessment.scores?.endHK1 || assessment.scores?.midHK1 || 5.0;
         const target = assessment.targetScore || 8.0;
         const dailyTime = assessment.dailyTime || 60;
         const mainBarrier = assessment.barriers?.[0] || "lo lắng về phần Hình học và Lượng giác";
 
-        let plan = '';
-        if (stage === 1) {
-          plan = `
-### TUẦN 1: Làm chủ Ứng dụng đạo hàm và Khảo sát hàm số (Lớp 12)
-Trong tuần này, cô muốn em tập trung biến phần em thấy "Bình thường" thành thế mạnh tuyệt đối nhé.
-- **Thứ 2 & 3:** Ôn lại lý thuyết về tính đơn điệu, cực trị và giá trị lớn nhất/nhỏ nhất. Làm 15 câu trắc nghiệm nhiều lựa chọn mức độ nhận biết - thông hiểu.
-- **Thứ 4 & 5:** Chinh phục bài toán Tiệm cận và Đồ thị hàm số. Đặc biệt chú ý cách đọc bảng biến thiên để không bị lừa nhé.
-- **Thứ 6 & 7:** Rèn luyện 10 câu trắc nghiệm Đúng/Sai về sự tương giao của đồ thị. Chủ nhật dành 30 phút hệ thống kiến thức bằng sơ đồ tư duy.
+        let content = `Chào **${student.fullName}** nhé! Cô giáo rất ấn tượng với điểm số ${score.toFixed(1)} hiện tại của em. Với mục tiêu duy trì và chắc chắn đạt điểm ${target}+ trong kỳ thi sắp tới, cô đã thiết kế lộ trình ${duration} tuần tập trung vào việc khắc phục các lỗ hổng lý thuyết và giúp em hệ thống lại kiến thức một cách bản chất nhất. Chúng ta sẽ dành ${dailyTime} phút mỗi ngày để cùng nhau tiến bộ nhé!\n\n`;
 
-### TUẦN 2: Củng cố Hình học không gian và Lượng giác 11
-Đừng để kiến thức cũ làm rào cản, cô sẽ giúp em lấy lại gốc phần này nhanh thôi:
-- **Thứ 2 & 3:** Công thức lượng giác và phương trình lượng giác cơ bản. Tập trung vào cách sử dụng Casio để kiểm tra nghiệm nhanh.
-- **Thứ 4 & 5:** Thể tích khối đa diện (Chóp, Lăng trụ). Vẽ hình thật to và xác định đúng đường cao là chìa khóa nhé em.
-- **Thứ 6 & 7:** Các bài toán thực tế về tối ưu hóa liên quan đến hàm số. Làm 5 câu vận dụng cao có sự hỗ trợ của Gia sư AI.
-
-### TUẦN 3: Tăng tốc Chuyên đề Mũ - Logarit
-Đây là phần lấy điểm, hãy thật cẩn thận với các điều kiện xác định:
-- **Thứ 2 & 3:** Biến đổi biểu thức lũy thừa, logarit. Học thuộc nằm lòng các tính chất cơ bản.
-- **Thứ 4 & 5:** Giải phương trình và bất phương trình mũ/logarit. Luyện kỹ năng loại trừ phương án sai.
-- **Thứ 6 & 7:** Bài tập về lãi suất ngân hàng và tăng trưởng dân số. Đây là dạng bài thực tế rất hay gặp trong đề thi.
-
-### TUẦN 4: Tổng ôn và Rèn luyện kỹ năng thực chiến
-- **Thứ 2 - 4:** Tổng hợp lại toàn bộ công thức của 3 chuyên đề trên. Làm 1 đề thi thử mini 30 câu trong 45 phút.
-- **Thứ 5 & 6:** Tập trung xử lý các lỗi sai hay gặp (Silly mistakes). Nghe Gia sư AI phân tích các "bẫy" lý thuyết.
-- **Thứ 7 & Chủ nhật:** Giải đề minh họa cấu trúc mới, tập trung vào phần Trả lời ngắn - phần này đòi hỏi em phải tính toán cực kỳ chính xác.`;
-        } else if (stage === 2) {
-          plan = `
-### TUẦN 1: Đột phá Nguyên hàm và Tích phân
-Giai đoạn này rất quan trọng, em cần nắm vững bản chất thay vì chỉ bấm máy:
-- **Thứ 2 & 3:** Nguyên hàm cơ bản và các quy tắc tính. Làm 20 câu để thành thạo bảng nguyên hàm.
-- **Thứ 4 & 5:** Phương pháp đổi biến số và từng phần. Cô khuyên em nên ghi chép lại các dấu hiệu nhận biết từng phương pháp.
-- **Thứ 6 & 7:** Tích phân và các ứng dụng tính diện tích hình phẳng. Hãy vẽ hình để dễ hình dung bài toán nhé.
-
-### TUẦN 2: Chinh phục Khối tròn xoay và Tổ hợp xác suất
-- **Thứ 2 & 3:** Mặt cầu, khối cầu, hình nón, hình trụ. Nắm vững công thức diện tích xung quanh và thể tích.
-- **Thứ 4 & 5:** Ôn lại Hoán vị, Chỉnh hợp, Tổ hợp và Xác suất lớp 11. Đây là phần dễ mất điểm nếu đọc đề không kỹ.
-- **Thứ 6 & 7:** Các bài toán phối hợp giữa hình học không gian và thực tế. Luyện 10 câu trắc nghiệm Đúng/Sai.
-
-### TUẦN 3: Làm chủ Số phức
-- **Thứ 2 & 3:** Các phép toán số phức, môđun và số phức liên hợp. Sử dụng Casio để xử lý nhanh các biểu thức phức tạp.
-- **Thứ 4 & 5:** Biểu diễn hình học của số phức và bài toán tìm tập hợp điểm. Vẽ hình chính xác giúp em giải nhanh hơn nhiều đấy.
-- **Thứ 6 & 7:** Phương trình bậc hai với hệ số thực trên tập số phức. Làm 10 câu trắc nghiệm mức độ thông hiểu.
-
-### TUẦN 4: Tăng tốc giải đề và Tối ưu thời gian
-- **Thứ 2 - 4:** Ôn tập các chuyên đề đã học trong tháng. Làm đề thi thử tập trung vào phản xạ nhanh.
-- **Thứ 5 & 6:** Rèn luyện kỹ năng giải các câu hỏi Vận dụng cao với sự gợi ý của Gia sư AI để học cách tư duy.
-- **Thứ 7 & Chủ nhật:** Hoàn thiện sơ đồ tư duy tổng hợp. Cô tin là em sẽ tự tin hơn rất nhiều sau tuần này!`;
-        } else {
-          plan = `
-### TUẦN 1: Phương pháp tọa độ trong không gian (Oxyz)
-Đây là phần trọng tâm chiếm nhiều điểm, hãy học thật chắc:
-- **Thứ 2 & 3:** Hệ tọa độ, điểm, vectơ trong không gian. Làm 25 câu nhận biết - thông hiểu để lấy tốc độ.
-- **Thứ 4 & 5:** Phương trình mặt phẳng và đường thẳng. Chú ý các vị trí tương đối và khoảng cách.
-- **Thứ 6 & 7:** Phương trình mặt cầu. Luyện tập 10 câu trắc nghiệm Đúng/Sai để chắc chắn kiến thức lý thuyết.
-
-### TUẦN 2: Dãy số, Giới hạn và Đạo hàm (Lớp 11)
-- **Thứ 2 & 3:** Dãy số, Cấp số cộng và Cấp số nhân. Nắm chắc công thức số hạng tổng quát để không bị nhầm lẫn.
-- **Thứ 4 & 5:** Giới hạn của dãy số và hàm số. Học cách khử các dạng vô định nhanh bằng cả tự luận và máy tính.
-- **Thứ 6 & 7:** Đạo hàm và ý nghĩa. Đặc biệt là phương trình tiếp tuyến - một dạng rất hay có trong đề thi.
-
-### TUẦN 3: Tổng ôn thực chiến - Cấu trúc đề 2025
-- **Thứ 2 & 3:** Giải đề tập trung vào phần I (Trắc nghiệm nhiều lựa chọn). Mục tiêu đạt tối đa điểm phần này.
-- **Thứ 4 & 5:** Chinh phục phần II (Trắc nghiệm Đúng/Sai). Đây là phần phân hóa học sinh rất cao, hãy đọc kỹ từng ý.
-- **Thứ 6 & 7:** Rèn luyện phần III (Trả lời ngắn). Yêu cầu em phải tính toán chính xác tuyệt đối, không được chủ quan nhé.
-
-### TUẦN 4: Về đích - Tự tin tỏa sáng
-- **Thứ 2 - 4:** Rà soát lại tất cả những câu sai trong các đề đã làm. Gia sư AI sẽ giúp em phân tích tại sao em lại sai.
-- **Thứ 5 & 6:** Làm 2 đề thi thử hoàn chỉnh đúng thời gian quy định (90 phút) để quen với áp lực.
-- **Thứ 7 & Chủ nhật:** Nghỉ ngơi nhẹ nhàng, xem lại các lưu ý quan trọng mà cô đã gửi. Em đã sẵn sàng rồi!`;
+        for (let w = 1; w <= duration; w++) {
+          // Xoay vòng các chủ đề nếu số tuần nhiều hơn số chủ đề
+          const topic = topics[(w - 1) % topics.length];
+          content += `### TUẦN ${w}: ${topic.toUpperCase()}\n`;
+          
+          if (w === duration) {
+            content += `Đây là tuần cuối cùng, cô trò mình sẽ tổng lực ôn tập và luyện đề thực chiến.\n`;
+            content += `- **Thứ 2 & 3:** Ôn lại nhanh các công thức trọng tâm của ${topic}. Làm 15 câu trắc nghiệm mức Vận dụng.\n`;
+            content += `- **Thứ 4:** Luyện đề thi thử cấu trúc mới. Tập trung kiểm soát thời gian và rèn kỹ năng không sai câu dễ.\n`;
+            content += `- **Thứ 5 & 6:** Phân tích kỹ các câu làm sai. Nếu sai do quên công thức, hãy chép lại và dán vào góc học tập nhé.\n`;
+            content += `- **Thứ 7:** Tổng duyệt rà soát toàn bộ kiến thức cùng cô và Gia sư AI.\n`;
+            content += `- **Chủ nhật:** Thư giãn, giữ tâm lý thoải mái để sẵn sàng bứt phá.\n\n`;
+          } else if (w % 2 === 1) {
+            content += `Tuần này chúng ta sẽ bám sát lý thuyết và các dạng bài nhận biết - thông hiểu của chuyên đề này.\n`;
+            content += `- **Thứ 2 & 3:** Hệ thống lại lý thuyết cốt lõi bằng sơ đồ tư duy. Làm 15 câu trắc nghiệm mức Hiểu và 5 câu Đúng - Sai.\n`;
+            content += `- **Thứ 4:** Tập trung vào các ví dụ minh họa và bài toán thực tế cơ bản. Làm 10 câu trắc nghiệm mức Hiểu.\n`;
+            content += `- **Thứ 5 & 6:** Chinh phục các câu hỏi mức độ Thông hiểu. Đừng ngần ngại hỏi Gia sư AI để hiểu rõ bản chất.\n`;
+            content += `- **Thứ 7:** Làm bài kiểm tra chuyên đề ngắn (15 câu) để đánh giá năng lực.\n`;
+            content += `- **Chủ nhật:** Xem lại các ghi chú và nghỉ ngơi một chút nhé.\n\n`;
+          } else {
+            content += `Tuần này chúng ta sẽ đào sâu vào các dạng bài Vận dụng và rèn luyện kỹ năng giải nhanh.\n`;
+            content += `- **Thứ 2 & 3:** Ôn tập các kỹ thuật Casio và mẹo giải nhanh cho ${topic}. Làm 10 câu trắc nghiệm mức Vận dụng.\n`;
+            content += `- **Thứ 4:** Tập trung vào các câu hỏi Đúng - Sai và Trả lời ngắn để hạn chế lỗi sai bản chất.\n`;
+            content += `- **Thứ 5 & 6:** Chinh phục 5 câu Vận dụng cao. Hãy để Gia sư AI dẫn dắt tư duy thay vì chỉ xem đáp án.\n`;
+            content += `- **Thứ 7:** Tổng hợp bài tập tổng hợp tuần (10 câu hỗn hợp).\n`;
+            content += `- **Chủ nhật:** Hệ thống lại các lỗi hay mắc phải trong tuần.\n\n`;
+          }
         }
 
-        return `Chào **${student.fullName}** nhé! Cô giáo rất ấn tượng với điểm số ${score.toFixed(1)} hiện tại của em. Với mục tiêu đạt ${target}/10, cô đã thiết kế riêng cho em lộ trình 4 tuần tập trung vào việc khắc phục các lỗ hổng lý thuyết và giúp em hệ thống lại kiến thức một cách bản chất nhất. Chúng ta sẽ dành ít nhất ${dailyTime} phút mỗi ngày để cùng nhau tiến bộ nhé!
+        content += `### LỜI KHUYÊN VÀ RÀO CẢN
+- **Để hiểu bản chất:** Đừng chỉ nhìn công thức. Hãy tự đặt câu hỏi "Tại sao lại có bước này?". Vẽ sơ đồ tư duy (Mindmap) để kết nối các định nghĩa.
+- **Để bớt quên công thức:** Dùng Flashcard hoặc Mindmap. Mỗi khi học xong một dạng, hãy tự vẽ lại sơ đồ các bước giải.
+- **Mỗi ngày ${dailyTime} phút:** Hãy tắt thông báo điện thoại, tập trung hoàn toàn. Chất lượng hơn số lượng em nhé!
 
-### LỜI KHUYÊN VƯỢT QUA RÀO CẢN
-Vì cô thấy em đang ${mainBarrier}, hãy thử áp dụng các mẹo sau:
-- **Không học vẹt:** Hãy luôn đặt câu hỏi "Tại sao?" khi gặp một công thức mới.
-- **Sử dụng màu sắc:** Dùng bút highlight cho các bước biến đổi quan trọng trong bài toán.
-- **Hỏi Gia sư AI ngay:** Khi bí ý tưởng quá 5 phút, hãy nhắn tin hỏi cô hoặc AI để được gợi ý hướng đi, đừng xem đáp án ngay sẽ làm mất tư duy của em đấy.
+Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ trình này, mục tiêu ${target}+ hoàn toàn nằm trong tầm tay em. Cố gắng lên nhé!`;
 
-${plan}
-
-Cô tin vào năng khiếu và sự chịu khó của em. Chỉ cần kiên trì mỗi ngày, mục tiêu ${target}+ sẽ nằm chắc trong tay cô trò mình. Cố gắng lên nhé, cô luôn ở bên cạnh ủng hộ em!`;
+        return content;
       };
 
       const TEACHER_RESPONSES = [
         "Tốt lắm em ơi, cô khen em vì nỗ lực không ngừng nghỉ, kết quả hôm nay rất xứng đáng!",
-        "Cô thấy em đang tiến bộ rõ rệt từng ngày, hãy giữ vững phong độ này nhé, yêu em!",
-        "Đừng nản lòng em nhé, phần này hơi khó nhưng cô tin em sẽ sớm vượt qua được thôi. Cố lên nào!",
-        "Cô rất tự hào về tinh thần tự giác học tập của em. Cần cô hỗ trợ gì thêm cứ nhắn ngay cho cô nha!",
-        "Lời giải của em hôm nay rất sáng tạo và thông minh, cô rất thích cách em tư duy đó.",
-        "Cố gắng lên em thân yêu, mục tiêu bứt phá điểm số đang rất gần rồi, cô luôn bên cạnh ủng hộ em hết mình.",
-        "Cô rất mừng khi thấy em đã hiểu bản chất vấn đề rồi. Tiếp tục phát huy tinh thần 'học sâu' này nhé!",
-        "Chuyên đề này hơi rắc rối chút xíu nhưng em đã xử lý rất tốt rồi đó, giỏi lắm!",
-        "Nhật ký hôm nay của em làm cô thấy vui lây luôn, chúc em có một đêm ngon giấc và mai lại chiến đấu tiếp nhé!",
-        "Cô tin tài năng và sự kiên trì của em sẽ làm nên chuyện lớn trong kỳ thi tới. Mãi tin em!"
+        "Cô thấy em đang tiến bộ rõ rệt từng ngày, hãy giữ vững phong độ này nhé!",
+        "Đừng nản lòng em nhé, phần này hơi khó nhưng cô tin em sẽ sớm vượt qua được thôi.",
+        "Cô rất tự hào về tinh thần tự giác học tập của em. Cần cô hỗ trợ gì thêm cứ nhắn cô nha!",
+        "Lời giải của em hôm nay rất sáng tạo và thông minh, cô đánh giá cao điều đó.",
+        "Cố gắng lên em, mục tiêu bứt phá điểm số đang rất gần rồi, cô luôn bên cạnh ủng hộ em.",
+        "Cô rất mừng khi thấy em đã hiểu bản chất vấn đề. Tiếp tục phát huy tinh thần này nhé!",
+        "Chuyên đề này hơi rắc rối chút xíu nhưng em đã xử lý rất tốt rồi đó.",
+        "Nhật ký hôm nay của em làm cô thấy vui lây, chúc em học tập thật tốt nhé!",
+        "Cô tin tài năng và sự kiên trì của em sẽ làm nên chuyện trong kỳ thi tới."
       ];
 
       const allAssessmentsSnapshot = await getDocs(collection(db, 'assessments'));
@@ -325,11 +283,16 @@ Cô tin vào năng khiếu và sự chịu khó của em. Chỉ cần kiên trì
           if (stageNum === 2) stageDate.setMonth(stageDate.getMonth() - 3);
           if (stageNum === 3) stageDate.setMonth(stageDate.getMonth() - 1);
           
-          const tasks = STAGE_TOPICS[stageNum as 1|2|3].flatMap((topicIdx, i) => [
-            { id: `t-${stageNum}-${topicIdx}-1`, content: `Ôn tập lý thuyết: ${TOPICS[topicIdx]}`, completed: true, week: i + 1 },
-            { id: `t-${stageNum}-${topicIdx}-2`, content: `Luyện tập bài tập trắc nghiệm Dạng 1 & 2: ${TOPICS[topicIdx]}`, completed: true, week: i + 1 },
-            { id: `t-${stageNum}-${topicIdx}-3`, content: `Giải đề tổng hợp chuyên đề: ${TOPICS[topicIdx]}`, completed: Math.random() > 0.1, week: i + 2 }
-          ]);
+          const randomWeeks = [4, 6, 8][Math.floor(Math.random() * 3)];
+          const tasks = [];
+          for (let w = 1; w <= randomWeeks; w++) {
+            const topicIdx = STAGE_TOPICS[stageNum as 1|2|3][(w - 1) % STAGE_TOPICS[stageNum as 1|2|3].length];
+            tasks.push(
+              { id: `t-${stageNum}-${w}-1`, content: `Ôn tập lý thuyết: ${TOPICS[topicIdx]}`, completed: true, week: w },
+              { id: `t-${stageNum}-${w}-2`, content: `Luyện tập trắc nghiệm ${TOPICS[topicIdx]}`, completed: true, week: w },
+              { id: `t-${stageNum}-${w}-3`, content: `Kiểm tra tổng hợp Tuần ${w}`, completed: Math.random() > 0.2, week: w }
+            );
+          }
 
           const logs: LearningLog[] = [];
           const logCount = 2 + Math.floor(Math.random() * 3);
@@ -365,16 +328,18 @@ Cô tin vào năng khiếu và sự chịu khó của em. Chỉ cần kiên trì
                           roadmapText.includes('Lộ trình cá nhân hóa Giai đoạn') ||
                           roadmapText.includes('Lộ trình bứt phá Giai đoạn') ||
                           roadmapText.includes('dựa trên mục tiêu điểm số và năng lực hiện tại') ||
-                          roadmapText.includes('AI đã xây dựng lộ trình đặc biệt');
+                          roadmapText.includes('TUẦN 1-2: TĂNG TỐC') || // Nhận diện format cũ (lộ trình ảo 2)
+                          roadmapText.includes('LỜI KHUYÊN VƯỢT QUA RÀO CẢN'); // Nhận diện format cũ
             
             const isMessyData = (stageAs.dailyTime && stageAs.dailyTime < 30) || 
                                 (String(stageAs.targetScore).length > 4) ||
-                                (stageAs.targetScore && stageAs.targetScore % 0.1 !== 0);
+                                (!stageAs.durationWeeks);
 
-            if (isError || isMessyData || !roadmapText.includes('TUẦN 1')) {
+            if (isError || isMessyData) {
               const updateRef = doc(db, 'assessments', stageAs.id!);
-              const cleanTargetScore = Math.round((stageAs.targetScore || 8.0) * 10) / 10;
+              const cleanTargetScore = Math.round((stageAs.targetScore || 8.0) * 2) / 2;
               const cleanDailyTime = (stageAs.dailyTime && stageAs.dailyTime >= 45) ? stageAs.dailyTime : (60 + Math.floor(Math.random() * 60));
+              const cleanDuration = stageAs.durationWeeks || randomWeeks;
               
               const updatedData: Partial<AssessmentData> = {
                 targetScore: cleanTargetScore,
@@ -384,9 +349,10 @@ Cô tin vào năng khiếu và sự chịu khó của em. Chỉ cần kiên trì
                 roadmap: generateRichRoadmap(stageNum, student, { 
                   ...stageAs, 
                   targetScore: cleanTargetScore, 
-                  dailyTime: cleanDailyTime 
+                  dailyTime: cleanDailyTime,
+                  durationWeeks: cleanDuration
                 }),
-                durationWeeks: 4
+                durationWeeks: cleanDuration
               };
               
               batch.update(updateRef, updatedData);
@@ -401,6 +367,7 @@ Cô tin vào năng khiếu và sự chịu khó của em. Chỉ cần kiên trì
               scores: { midHK1: midScore, endHK1: endScore },
               targetScore: targetScore,
               dailyTime: 60 + Math.floor(Math.random() * 60),
+              durationWeeks: randomWeeks,
               barriers: ['lo lắng về kiến thức lý thuyết và các câu hỏi vận dụng cao']
             };
 
@@ -408,7 +375,7 @@ Cô tin vào năng khiếu và sự chịu khó của em. Chỉ cần kiên trì
               userId: studentId,
               stage: stageNum,
               scores: tempAs.scores!,
-              targetScore: Math.round(tempAs.targetScore! * 10) / 10,
+              targetScore: tempAs.targetScore!,
               dailyTime: tempAs.dailyTime!,
               examType: 'Xét đại học',
               topicConfidence: {},
@@ -418,7 +385,7 @@ Cô tin vào năng khiếu và sự chịu khó của em. Chỉ cần kiên trì
               roadmap: generateRichRoadmap(stageNum, student, tempAs),
               tasks: tasks,
               learningLogs: logs,
-              durationWeeks: 4,
+              durationWeeks: randomWeeks,
               createdAt: stageDate
             };
             batch.set(newDocRef, newAs);
