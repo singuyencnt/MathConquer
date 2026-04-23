@@ -8,7 +8,7 @@ import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously } from 'firebase/auth';
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { UserProfile, Role, AssessmentData } from './types';
-import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare } from 'lucide-react';
+import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AssessmentForm from './components/AssessmentForm';
 import TeacherDashboard from './components/TeacherDashboard';
@@ -109,6 +109,13 @@ export default function App() {
 
   const [showGuestLogin, setShowGuestLogin] = useState(false);
   const [accessCode, setAccessCode] = useState('');
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const isInApp = /fbav|fbios|messen|instagram|zalo|line|pinter/i.test(ua);
+    setIsInAppBrowser(isInApp);
+  }, []);
 
   const handleGuestLogin = async () => {
     // Secret code only GV knows
@@ -164,6 +171,30 @@ export default function App() {
             <h1 className="text-4xl font-black text-text-main mb-2 tracking-tighter uppercase">MATHCONQUER</h1>
             <p className="text-text-sub max-w-lg mx-auto font-medium">Hệ thống xây dựng lộ trình ôn tập Toán 12 cá nhân hóa bằng trí tuệ nhân tạo.</p>
           </div>
+
+          <AnimatePresence>
+            {isInAppBrowser && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="mb-8 overflow-hidden"
+              >
+                <div className="bg-orange-50 border-2 border-orange-200 p-4 rounded-2xl flex flex-col items-center text-center gap-3">
+                  <div className="bg-orange-200 text-orange-700 p-2 rounded-full">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-orange-800 uppercase tracking-tight">Cảnh báo trình duyệt</h4>
+                    <p className="text-[0.7rem] text-orange-700 font-bold leading-relaxed mt-1">
+                      Bạn đang truy cập qua trình duyệt của Zalo/Facebook/Messenger. Google sẽ chặn đăng nhập để bảo mật.
+                      <br /> Vui lòng nhấn vào <span className="underline">Dấu 3 chấm</span> và chọn <span className="font-black italic">"Mở bằng trình duyệt ngoài"</span> hoặc <span className="font-black italic">"Mở bằng Safari/Chrome"</span>.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Student Column */}
