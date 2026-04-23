@@ -19,8 +19,20 @@ export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'home' | 'assessment' | 'roadmap' | 'dashboard' | 'aitutor'>('home');
+  const [hasSetInitialView, setHasSetInitialView] = useState(false);
   const [selectedStage, setSelectedStage] = useState<number>(1);
   const [latestAssessment, setLatestAssessment] = useState<AssessmentData | null>(null);
+
+  // Set initial view based on role once after login
+  useEffect(() => {
+    if (user && !hasSetInitialView) {
+      setView(user.role === 'teacher' ? 'dashboard' : 'home');
+      setHasSetInitialView(true);
+    } else if (!user) {
+      setHasSetInitialView(false);
+      setView('home');
+    }
+  }, [user, hasSetInitialView]);
 
   useEffect(() => {
     const fetchLatestAssessment = async () => {
@@ -43,13 +55,6 @@ export default function App() {
 
     if (view === 'home') {
       fetchLatestAssessment();
-    }
-  }, [user, view]);
-
-  // Redirect teachers to dashboard by default if they are on home
-  useEffect(() => {
-    if (user?.role === 'teacher' && view === 'home') {
-      setView('dashboard');
     }
   }, [user, view]);
 
