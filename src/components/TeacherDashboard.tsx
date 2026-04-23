@@ -174,9 +174,43 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         "Học bài này xong em thấy tự tin hơn hẳn.",
         "Em vẫn còn nhầm lẫn công thức, cần luyện tập thêm nhiều.",
         "Hôm nay em dành 2 tiếng để giải đề, kết quả khá ổn.",
-        "Gia sư AI hướng dẫn rất dễ hiểu, em đã tự giải được bài toán vận dụng cao.",
-        "Em đang cố gắng bám sát lộ trình tuần này."
+        "Gia sư AI hướng dẫn rất hiểu bài, em đã tự giải được bài toán vận dụng cao.",
+        "Em đang cố gắng bám sát lộ trình tuần này.",
+        "Kiến thức về phần này thật sự rất rộng, nhưng em sẽ không bỏ cuộc.",
+        "Em vừa làm xong đề thi thử chuyên đề, đạt 8.5 điểm.",
+        "Cảm ơn Gia sư AI đã nhắc nhở em về các bẫy trong câu hỏi thực tế.",
+        "Em thấy mình tiến bộ rõ rệt ở phần bài tập trắc nghiệm trả lời ngắn.",
+        "Hôm nay em học nhóm và cùng các bạn giải quyết được nhiều câu khó.",
+        "Đã hoàn thành mục tiêu tuần 2 sớm hơn dự kiến.",
+        "Em cần luyện thêm về kỹ năng sử dụng máy tính Casio cho phần này.",
+        "Một ngày học tập khá mệt nhưng cảm thấy rất xứng đáng.",
+        "Em đã hiểu bản chất của đồ thị hàm số sau khi đọc tài liệu hướng dẫn.",
+        "Cố gắng mỗi ngày một ít, thành công đang đến gần."
       ];
+
+      const generateRichRoadmap = (stage: number, studentName: string) => {
+        const stageThemes = {
+          1: "Khởi động và Củng cố nền tảng",
+          2: "Tăng tốc và Xử lý chuyên đề trọng tâm",
+          3: "Bứt phá và Rèn luyện kỹ năng thực chiến"
+        };
+        const stageGoals = {
+          1: "Nắm vững lý thuyết Hàm số và Hình học đa diện cơ bản.",
+          2: "Xử lý dứt điểm Mũ, Logarit và các dạng toán tổ hợp xác suất.",
+          3: "Làm chủ Nguyên hàm, Tích phân và Hình học Oxyz lớp 12."
+        };
+        
+        const topics = STAGE_TOPICS[stage as 1|2|3].map(idx => TOPICS[idx]);
+        
+        return `## LỘ TRÌNH CÁ NHÂN HÓA - Giai đoạn ${stage}: ${stageThemes[stage as 1|2|3]}\n\n` +
+               `Chào **${studentName}**, dựa trên mục tiêu điểm số và năng lực hiện tại, AI đã xây dựng lộ trình đặc biệt dành riêng cho em.\n\n` +
+               `### Mục tiêu trọng tâm:\n${stageGoals[stage as 1|2|3]}\n\n` +
+               `### Kế hoạch chi tiết 4 tuần:\n` +
+               `* **Tuần 1-2:** Tập trung đào sâu lý thuyết và các dạng bài tập nhận biết - thông hiểu của chuyên đề: ${topics[0]}.\n` +
+               `* **Tuần 3:** Thực hành vận dụng cao, xử lý các bài toán thực tế thuộc chuyên đề: ${topics[1]}.\n` +
+               `* **Tuần 4:** Tổng ôn tập, rèn kỹ năng giải trắc nghiệm đúng/sai và trả lời ngắn cho cả 3 chuyên đề: ${topics.join(", ")}.\n\n` +
+               `*Chúc em ôn tập hiệu quả và giữ vững quyết tâm!*`;
+      };
 
       const TEACHER_RESPONSES = [
         "Tốt lắm, hãy tiếp tục phát huy tinh thần này nhé!",
@@ -246,12 +280,15 @@ export default function TeacherDashboard({ user, onBack }: Props) {
           }
 
           if (stageAs) {
+            // Check if existing roadmap is an error message
+            const isError = stageAs.roadmap?.includes('error') || stageAs.roadmap?.includes('Quota') || stageAs.roadmap?.includes('Lộ trình cá nhân hóa Giai đoạn');
+            
             // Update existing or "broken" assessment
             const updateRef = doc(db, 'assessments', stageAs.id!);
             batch.update(updateRef, {
               tasks: tasks,
               learningLogs: logs,
-              roadmap: stageAs.roadmap || `Lộ trình bứt phá Giai đoạn ${stageNum}: Tập trung vào các chuyên đề then chốt.`,
+              roadmap: isError ? generateRichRoadmap(stageNum, student.fullName) : stageAs.roadmap,
               durationWeeks: 4
             });
           } else {
@@ -271,7 +308,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
               casioSkill: 'Cơ bản',
               barriers: ['Chưa bám sát lộ trình'],
               aiRole: 'Thân thiện',
-              roadmap: `Lộ trình cá nhân hóa Giai đoạn ${stageNum} do AI xây dựng tự động cho mục tiêu bứt phá điểm số.`,
+              roadmap: generateRichRoadmap(stageNum, student.fullName),
               tasks: tasks,
               learningLogs: logs,
               durationWeeks: 4,
