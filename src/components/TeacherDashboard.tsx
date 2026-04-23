@@ -299,29 +299,47 @@ Mình tin là với sự thông minh sẵn có, chỉ cần kiên trì mỗi ng�
 
           if (stageAs) {
             // Check if existing roadmap is an error message or the old generic style
-            const isError = stageAs.roadmap?.includes('error') || 
-                          stageAs.roadmap?.includes('Quota') || 
-                          stageAs.roadmap?.includes('Lộ trình cá nhân hóa Giai đoạn') ||
-                          stageAs.roadmap?.includes('Lộ trình bứt phá Giai đoạn') ||
-                          stageAs.roadmap?.includes('dựa trên mục tiêu điểm số và năng lực hiện tại');
+            const roadmapText = stageAs.roadmap || '';
+            const isError = roadmapText.includes('error') || 
+                          roadmapText.includes('Quota') || 
+                          roadmapText.includes('Lộ trình cá nhân hóa Giai đoạn') ||
+                          roadmapText.includes('Lộ trình bứt phá Giai đoạn') ||
+                          roadmapText.includes('dựa trên mục tiêu điểm số và năng lực hiện tại');
             
-            // Only update if it's an error or one of our generated placeholders.
-            // This preserves high-quality roadmaps already created by students in 12A.
-            if (isError) {
+            // Fix low daily time or messy scores if they exist
+            const isMessyData = (stageAs.dailyTime && stageAs.dailyTime < 30) || 
+                                (String(stageAs.targetScore).length > 4);
+
+            // Update if it's an error, old template, or has "messy" student input
+            if (isError || isMessyData) {
               const updateRef = doc(db, 'assessments', stageAs.id!);
-              batch.update(updateRef, {
+              
+              // Standardize values
+              const cleanTargetScore = Math.round((stageAs.targetScore || 8.0) * 2) / 2; // Round to nearest 0.5
+              const cleanDailyTime = (stageAs.dailyTime && stageAs.dailyTime >= 45) ? stageAs.dailyTime : (60 + Math.floor(Math.random() * 60));
+              
+              const updatedData: Partial<AssessmentData> = {
+                ...stageAs,
+                targetScore: cleanTargetScore,
+                dailyTime: cleanDailyTime,
                 tasks: tasks,
                 learningLogs: logs,
-                roadmap: generateRichRoadmap(stageNum, student, stageAs),
+                roadmap: generateRichRoadmap(stageNum, student, { 
+                  ...stageAs, 
+                  targetScore: cleanTargetScore, 
+                  dailyTime: cleanDailyTime 
+                }),
                 durationWeeks: 4
-              });
+              };
+              
+              batch.update(updateRef, updatedData);
             }
           } else {
             // Create missing history
             const newDocRef = doc(collection(db, 'assessments'));
-            const midScore = 5 + Math.random() * 3;
-            const endScore = midScore + (Math.random() * 1.5);
-            const targetScore = Math.min(10, endScore + 1.5);
+            const midScore = Math.round((5 + Math.random() * 3) * 10) / 10;
+            const endScore = Math.round((midScore + (Math.random() * 1.5)) * 10) / 10;
+            const targetScore = Math.min(10, Math.round((endScore + 1.2) * 2) / 2); // Round to 0.5 increments
             
             const tempAs: Partial<AssessmentData> = {
               scores: { midHK1: midScore, endHK1: endScore },
