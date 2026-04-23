@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, getDocs, query, where, orderBy, writeBatch, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { UserProfile, AssessmentData, LearningLog } from '../types';
-import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, AlertTriangle, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2, Send, Quote } from 'lucide-react';
+import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, AlertTriangle, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2, Send, Quote, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 
@@ -18,6 +18,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   const [loading, setLoading] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [isReplying, setIsReplying] = useState<Record<string, boolean>>({});
@@ -135,6 +136,167 @@ export default function TeacherDashboard({ user, onBack }: Props) {
     }
   };
 
+  const handleSeedDemoData = async () => {
+    if (students.length === 0) {
+      alert("Không có học sinh nào để chuẩn hóa dữ liệu.");
+      return;
+    }
+
+    if (!confirm(`Hệ thống sẽ chuẩn hóa lộ trình cho ${students.length} học sinh (Giai đoạn 1, 2, 3) để làm đẹp dữ liệu báo cáo. Quá trình này có thể mất vài giây. Bạn có chắc chắn?`)) return;
+    
+    setSeeding(true);
+    try {
+      const TOPICS = [
+        "Ứng dụng đạo hàm để khảo sát hàm số",
+        "Hàm số lũy thừa, mũ và logarit",
+        "Nguyên hàm và tích phân",
+        "Số phức",
+        "Thể tích khối đa diện",
+        "Khối tròn xoay",
+        "Phương pháp tọa độ trong không gian",
+        "Lượng giác (Lớp 11)",
+        "Tổ hợp và xác suất (Lớp 11)",
+        "Dãy số và cấp số (Lớp 11)",
+        "Giới hạn và đạo hàm (Lớp 11)"
+      ];
+
+      const STAGE_TOPICS = {
+        1: [0, 4, 7], // Hàm số, Đa diện, Lượng giác
+        2: [1, 5, 8], // Mũ-Log, Tròn xoay, Tổ hợp
+        3: [2, 3, 6, 9, 10] // Tích phân, Số phức, Oxyz, Dãy số, Giới hạn
+      };
+
+      const FEELINGS = ['Tốt', 'Bình thường', 'Cần cố gắng'] as const;
+      const LOG_TEMPLATES = [
+        "Hôm nay em đã ôn tập xong phần lý thuyết và làm được 20 câu trắc nghiệm.",
+        "Phần này hơi khó hiểu, em cần xem thêm video bài giảng.",
+        "Em đã nắm vững các dạng bài tập cơ bản, chuẩn bị sang phần nâng cao.",
+        "Học bài này xong em thấy tự tin hơn hẳn.",
+        "Em vẫn còn nhầm lẫn công thức, cần luyện tập thêm nhiều.",
+        "Hôm nay em dành 2 tiếng để giải đề, kết quả khá ổn.",
+        "Gia sư AI hướng dẫn rất dễ hiểu, em đã tự giải được bài toán vận dụng cao.",
+        "Em đang cố gắng bám sát lộ trình tuần này."
+      ];
+
+      const TEACHER_RESPONSES = [
+        "Tốt lắm, hãy tiếp tục phát huy tinh thần này nhé!",
+        "Phần này quan trọng trong đề thi, em cần chú ý kỹ các công thức đạo hàm.",
+        "Đừng quá lo lắng, hãy chia nhỏ bài tập ra làm từng phần một.",
+        "Thầy thấy em tiến bộ rất nhanh, cố gắng duy trì nhé!",
+        "Nếu khó quá hãy nhắn tin hỏi thầy hoặc nhờ Gia sư AI gợi ý thêm nhé.",
+        "Rất tuyệt vời, mục tiêu bứt phá điểm số đang rất gần rồi!",
+        "Hãy tập trung xử lý dứt điểm chuyên đề này trong tuần này nhé."
+      ];
+
+      // Get all current assessments to find what needs fixing/adding
+      const allAssessmentsSnapshot = await getDocs(collection(db, 'assessments'));
+      const existingAssessments = allAssessmentsSnapshot.docs.map(d => ({ 
+        id: d.id, 
+        ...d.data() 
+      } as AssessmentData));
+
+      const batch = writeBatch(db);
+      let count = 0;
+
+      for (const student of students) {
+        const studentId = student.uid;
+        if (!studentId) continue;
+
+        const studentAs = existingAssessments.filter(a => a.userId === studentId);
+
+        for (let stageNum = 1; stageNum <= 3; stageNum++) {
+          let stageAs = studentAs.find(a => a.stage === stageNum);
+          
+          const stageDate = new Date();
+          if (stageNum === 1) stageDate.setMonth(stageDate.getMonth() - 5);
+          if (stageNum === 2) stageDate.setMonth(stageDate.getMonth() - 3);
+          if (stageNum === 3) stageDate.setMonth(stageDate.getMonth() - 1);
+          
+          // Generate realistic tasks based on stage
+          const tasks = STAGE_TOPICS[stageNum as 1|2|3].flatMap((topicIdx, i) => [
+            { id: `t-${stageNum}-${topicIdx}-1`, content: `Ôn tập lý thuyết: ${TOPICS[topicIdx]}`, completed: true, week: i + 1 },
+            { id: `t-${stageNum}-${topicIdx}-2`, content: `Luyện tập bài tập trắc nghiệm Dạng 1 & 2: ${TOPICS[topicIdx]}`, completed: true, week: i + 1 },
+            { id: `t-${stageNum}-${topicIdx}-3`, content: `Giải đề tổng hợp chuyên đề: ${TOPICS[topicIdx]}`, completed: Math.random() > 0.1, week: i + 2 }
+          ]);
+
+          // Generate realistic logs
+          const logs: LearningLog[] = [];
+          const logCount = 2 + Math.floor(Math.random() * 3);
+          for (let l = 0; l < logCount; l++) {
+            const logDate = new Date(stageDate);
+            logDate.setDate(logDate.getDate() + (l * 5) + 2);
+            
+            const logFeeling = FEELINGS[Math.floor(Math.random() * FEELINGS.length)];
+            const hasResponse = Math.random() > 0.4;
+            
+            const log: LearningLog = {
+              id: `log-${stageNum}-${l}-${Date.now()}-${Math.random()}`,
+              date: logDate,
+              content: LOG_TEMPLATES[Math.floor(Math.random() * LOG_TEMPLATES.length)],
+              feeling: logFeeling
+            };
+
+            if (hasResponse) {
+              const resDate = new Date(logDate);
+              resDate.setDate(resDate.getDate() + 1);
+              log.teacherResponse = TEACHER_RESPONSES[Math.floor(Math.random() * TEACHER_RESPONSES.length)];
+              log.teacherResponseDate = resDate;
+            }
+            logs.push(log);
+          }
+
+          if (stageAs) {
+            // Update existing or "broken" assessment
+            const updateRef = doc(db, 'assessments', stageAs.id!);
+            batch.update(updateRef, {
+              tasks: tasks,
+              learningLogs: logs,
+              roadmap: stageAs.roadmap || `Lộ trình bứt phá Giai đoạn ${stageNum}: Tập trung vào các chuyên đề then chốt.`,
+              durationWeeks: 4
+            });
+          } else {
+            // Create missing history
+            const newDocRef = doc(collection(db, 'assessments'));
+            const newAs: AssessmentData = {
+              userId: studentId,
+              stage: stageNum,
+              scores: {
+                midHK1: 5 + Math.random() * 3,
+                endHK1: 6 + Math.random() * 3
+              },
+              targetScore: 8 + Math.random() * 1.5,
+              dailyTime: 2,
+              examType: 'Xét đại học',
+              topicConfidence: {},
+              casioSkill: 'Cơ bản',
+              barriers: ['Chưa bám sát lộ trình'],
+              aiRole: 'Thân thiện',
+              roadmap: `Lộ trình cá nhân hóa Giai đoạn ${stageNum} do AI xây dựng tự động cho mục tiêu bứt phá điểm số.`,
+              tasks: tasks,
+              learningLogs: logs,
+              durationWeeks: 4,
+              createdAt: stageDate
+            };
+            batch.set(newDocRef, newAs);
+          }
+          count++;
+        }
+      }
+
+      await batch.commit();
+      alert(`Thành công! Đã chuẩn hóa và tạo mới ${count} lộ trình cho ${students.length} học sinh.`);
+      
+      // Refresh students and assessments
+      const querySnapshot = await getDocs(query(collection(db, 'users'), where('role', '==', 'student')));
+      setStudents(querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile)));
+    } catch (error: any) {
+      console.error("Error seeding data:", error);
+      alert(`Có lỗi xảy ra: ${error.message || "Không xác định"}`);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   const calculateStudentProgress = (assessment: AssessmentData) => {
     if (!assessment.tasks || assessment.tasks.length === 0) return 0;
     const completed = assessment.tasks.filter(t => t.completed).length;
@@ -173,14 +335,24 @@ export default function TeacherDashboard({ user, onBack }: Props) {
               </div>
               <div className="flex items-center gap-3 self-start">
                 {user.email === 'minhkhoiklk@gmail.com' && (
-                  <button 
-                    onClick={handleClearAllGlobalHistory}
-                    disabled={clearing}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-black transition-colors border border-red-200 uppercase tracking-wider"
-                  >
-                    {clearing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                    Xóa sạch dữ liệu hệ thống
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleSeedDemoData}
+                      disabled={seeding}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-xs font-black hover:shadow-md transition-all disabled:opacity-50 uppercase tracking-wider"
+                    >
+                      {seeding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                      Làm đẹp dữ liệu (Demo)
+                    </button>
+                    <button 
+                      onClick={handleClearAllGlobalHistory}
+                      disabled={clearing}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-black transition-colors border border-red-200 uppercase tracking-wider"
+                    >
+                      {clearing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                      Xóa sạch dữ liệu hệ thống
+                    </button>
+                  </div>
                 )}
                 <button 
                   onClick={onBack}
