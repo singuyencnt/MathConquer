@@ -188,28 +188,44 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         "Cố gắng mỗi ngày một ít, thành công đang đến gần."
       ];
 
-      const generateRichRoadmap = (stage: number, studentName: string) => {
+      const generateRichRoadmap = (stage: number, student: UserProfile, assessment: Partial<AssessmentData>) => {
         const stageThemes = {
           1: "Khởi động và Củng cố nền tảng",
           2: "Tăng tốc và Xử lý chuyên đề trọng tâm",
           3: "Bứt phá và Rèn luyện kỹ năng thực chiến"
         };
-        const stageGoals = {
-          1: "Nắm vững lý thuyết Hàm số và Hình học đa diện cơ bản.",
-          2: "Xử lý dứt điểm Mũ, Logarit và các dạng toán tổ hợp xác suất.",
-          3: "Làm chủ Nguyên hàm, Tích phân và Hình học Oxyz lớp 12."
-        };
         
         const topics = STAGE_TOPICS[stage as 1|2|3].map(idx => TOPICS[idx]);
-        
-        return `## LỘ TRÌNH CÁ NHÂN HÓA - Giai đoạn ${stage}: ${stageThemes[stage as 1|2|3]}\n\n` +
-               `Chào **${studentName}**, dựa trên mục tiêu điểm số và năng lực hiện tại, AI đã xây dựng lộ trình đặc biệt dành riêng cho em.\n\n` +
-               `### Mục tiêu trọng tâm:\n${stageGoals[stage as 1|2|3]}\n\n` +
-               `### Kế hoạch chi tiết 4 tuần:\n` +
-               `* **Tuần 1-2:** Tập trung đào sâu lý thuyết và các dạng bài tập nhận biết - thông hiểu của chuyên đề: ${topics[0]}.\n` +
-               `* **Tuần 3:** Thực hành vận dụng cao, xử lý các bài toán thực tế thuộc chuyên đề: ${topics[1]}.\n` +
-               `* **Tuần 4:** Tổng ôn tập, rèn kỹ năng giải trắc nghiệm đúng/sai và trả lời ngắn cho cả 3 chuyên đề: ${topics.join(", ")}.\n\n` +
-               `*Chúc em ôn tập hiệu quả và giữ vững quyết tâm!*`;
+        const score = assessment.scores?.endHK1 || assessment.scores?.midHK1 || 5.0;
+        const target = assessment.targetScore || 8.0;
+        const dailyTime = assessment.dailyTime || 60;
+        const mainBarrier = assessment.barriers?.[0] || "lo lắng về phần Hình học và Lượng giác";
+
+        return `Chào **${student.fullName}** nhé! Mình rất ấn tượng với điểm số ${score.toFixed(1)} của bạn trong kỳ kiểm tra vừa rồi. Với nền tảng tư duy hiện có, việc đạt mục tiêu ${target}/10 trong kỳ thi tới là hoàn toàn nằm trong tầm tay. Tuy nhiên, mình thấy bạn đang ${mainBarrier}. Đừng lo, mình sẽ cùng bạn giải quyết từng chút một trong lộ trình này nhé!
+
+### LỜI KHUYÊN VƯỢT QUA RÀO CẢN
+Vì bạn cảm thấy cần củng cố bản chất lý thuyết, mình khuyên bạn thay vì học thuộc lòng công thức, hãy thử:
+- Vẽ sơ đồ tư duy (Mindmap) để kết nối các định nghĩa.
+- Với Hình học: Luôn vẽ hình thật to, rõ ràng và sử dụng bút màu để phân biệt các mặt phẳng.
+- Tận dụng Gia sư AI khi gặp các bài toán vận dụng cao để hiểu hướng đi thay vì chỉ tìm đáp án.
+
+### TUẦN 1-2: ${stageThemes[stage as 1|2|3].toUpperCase()}
+Tuần này chúng ta sẽ tập trung dứt điểm khối lượng kiến thức trọng tâm của giai đoạn ${stage}.
+
+**Nội dung chính:** ${topics[0]} & ${topics[1]}
+
+- **Ngày 1-3:** Lấy lại gốc và ôn tập lý thuyết cốt lõi. Thực hiện 15 câu trắc nghiệm nhiều lựa chọn (mức Biết/Hiểu).
+- **Ngày 4-7:** Phá băng các dạng toán thực tế. Thực hiện 10 câu trắc nghiệm Đúng - Sai để hiểu sâu bản chất.
+- **Tuần 2:** Tập trung vào các câu hỏi mức Vận dụng (Dạng trả lời ngắn).
+
+### TUẦN 3-4: TỐI ƯU ĐIỂM SỐ VÀ TĂNG TỐC
+Tuần này tập trung vào chuyên đề: ${topics[2] || "Tổng hợp kiến thức"}.
+
+- **Ngày 8-10:** Ôn tập công thức tổng quát và cách tính nhanh bằng Casio.
+- **Ngày 11-12:** Thực hiện 15 câu trắc nghiệm Đúng - Sai về khảo sát hàm số và các biến thể đồ thị.
+- **Ngày 13-14:** Tổng duyệt rà soát qua 01 đề minh họa cấu trúc mới (Trắc nghiệm + Đúng/Sai + Trả lời ngắn).
+
+Mình tin là với sự thông minh sẵn có, chỉ cần kiên trì mỗi ngày ${dailyTime} phút theo lộ trình này, bạn sẽ không chỉ đạt ${target} điểm mà còn có thể cao hơn nữa đấy. Cố gắng lên bạn nhé!`;
       };
 
       const TEACHER_RESPONSES = [
@@ -280,35 +296,49 @@ export default function TeacherDashboard({ user, onBack }: Props) {
           }
 
           if (stageAs) {
-            // Check if existing roadmap is an error message
-            const isError = stageAs.roadmap?.includes('error') || stageAs.roadmap?.includes('Quota') || stageAs.roadmap?.includes('Lộ trình cá nhân hóa Giai đoạn');
+            // Check if existing roadmap is an error message or the old generic style
+            const isError = stageAs.roadmap?.includes('error') || 
+                          stageAs.roadmap?.includes('Quota') || 
+                          stageAs.roadmap?.includes('Lộ trình cá nhân hóa Giai đoạn') ||
+                          stageAs.roadmap?.includes('Lộ trình bứt phá Giai đoạn');
             
-            // Update existing or "broken" assessment
-            const updateRef = doc(db, 'assessments', stageAs.id!);
-            batch.update(updateRef, {
-              tasks: tasks,
-              learningLogs: logs,
-              roadmap: isError ? generateRichRoadmap(stageNum, student.fullName) : stageAs.roadmap,
-              durationWeeks: 4
-            });
+            // Only update if it's an error or one of our generated placeholders.
+            // This preserves high-quality roadmaps already created by students in 12A.
+            if (isError) {
+              const updateRef = doc(db, 'assessments', stageAs.id!);
+              batch.update(updateRef, {
+                tasks: tasks,
+                learningLogs: logs,
+                roadmap: generateRichRoadmap(stageNum, student, stageAs),
+                durationWeeks: 4
+              });
+            }
           } else {
             // Create missing history
             const newDocRef = doc(collection(db, 'assessments'));
+            const midScore = 5 + Math.random() * 3;
+            const endScore = midScore + (Math.random() * 1.5);
+            const targetScore = Math.min(10, endScore + 1.5);
+            
+            const tempAs: Partial<AssessmentData> = {
+              scores: { midHK1: midScore, endHK1: endScore },
+              targetScore: targetScore,
+              dailyTime: 60 + Math.floor(Math.random() * 60),
+              barriers: ['lo lắng về kiến thức lý thuyết và các câu hỏi vận dụng cao']
+            };
+
             const newAs: AssessmentData = {
               userId: studentId,
               stage: stageNum,
-              scores: {
-                midHK1: 5 + Math.random() * 3,
-                endHK1: 6 + Math.random() * 3
-              },
-              targetScore: 8 + Math.random() * 1.5,
-              dailyTime: 2,
+              scores: tempAs.scores!,
+              targetScore: tempAs.targetScore!,
+              dailyTime: tempAs.dailyTime!,
               examType: 'Xét đại học',
               topicConfidence: {},
               casioSkill: 'Cơ bản',
-              barriers: ['Chưa bám sát lộ trình'],
+              barriers: tempAs.barriers!,
               aiRole: 'Thân thiện',
-              roadmap: generateRichRoadmap(stageNum, student.fullName),
+              roadmap: generateRichRoadmap(stageNum, student, tempAs),
               tasks: tasks,
               learningLogs: logs,
               durationWeeks: 4,
