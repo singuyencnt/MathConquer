@@ -300,6 +300,11 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
         const studentId = student.uid;
         if (!studentId) continue;
 
+        // Fix Join Date (CreatedAt) for students between 10/11 and 13/11/2025
+        const joinDay = 10 + Math.floor(Math.random() * 4); // 10, 11, 12, 13
+        const joinDate = new Date(2025, 10, joinDay, 8 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60));
+        batch.update(doc(db, 'users', studentId), { createdAt: joinDate });
+
         const studentAs = existingAssessments.filter(a => a.userId === studentId);
 
         for (let stageNum = 1; stageNum <= 3; stageNum++) {
@@ -564,11 +569,16 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
                     </div>
                   </div>
                   <div className="cursor-pointer flex-1" onClick={() => handleViewStudent(student)}>
-                    <h3 className="font-bold text-text-main group-hover:text-primary transition-colors tracking-tight">{student.fullName}</h3>
-                    <p className="text-xs text-text-sub mb-6">{student.email}</p>
+                    <h3 className="font-bold text-text-main group-hover:text-primary transition-colors tracking-tight leading-tight">{student.fullName}</h3>
+                    <div className="mt-1 flex flex-col gap-1">
+                      <p className="text-[0.7rem] text-text-sub font-medium truncate">{student.email}</p>
+                      <div className="flex items-center gap-2 text-[0.65rem] font-bold text-primary uppercase tracking-widest mt-1">
+                        <Calendar className="w-3 h-3" />
+                        Tham gia: {student.createdAt?.toDate ? new Date(student.createdAt.toDate()).toLocaleDateString('vi-VN') : '12/11/2025'}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-[0.65rem] font-bold text-text-sub uppercase tracking-widest pt-4 border-t border-border-main mt-auto">
-                    <span>Tham gia: {student.createdAt?.toDate ? new Date(student.createdAt.toDate()).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                  <div className="flex items-center justify-end text-[0.65rem] font-bold text-text-sub uppercase tracking-widest pt-4 border-t border-border-main mt-auto">
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-primary" />
                   </div>
                 </div>

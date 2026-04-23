@@ -36,7 +36,7 @@ export default function App() {
 
   useEffect(() => {
     const fetchLatestAssessment = async () => {
-      if (!user || user.role !== 'student') return;
+      if (!user) return; // Allow both student and teacher to fetch their own assessment for demo
       try {
         const q = query(
           collection(db, 'assessments'),
@@ -53,7 +53,7 @@ export default function App() {
       }
     };
 
-    if (view === 'home') {
+    if (view === 'home' || view === 'roadmap') {
       fetchLatestAssessment();
     }
   }, [user, view]);
@@ -364,24 +364,23 @@ export default function App() {
             <LayoutDashboard className="w-4 h-4" />
             Tổng quan
           </li>
-            {user.role === 'student' && (
-            <>
-              <li 
-                onClick={() => setView('roadmap')}
-                className={`px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-3 ${view === 'roadmap' ? 'bg-primary text-white shadow-md' : 'text-text-sub hover:bg-bg-main'}`}
-              >
-                <BookOpen className="w-4 h-4" />
-                Lộ trình cá nhân
-              </li>
-              <li 
-                onClick={() => setView('aitutor')}
-                className={`px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-3 ${view === 'aitutor' ? 'bg-primary text-white shadow-md' : 'text-text-sub hover:bg-bg-main'}`}
-              >
-                <Bot className="w-4 h-4" />
-                Gia sư ảo AI
-              </li>
-            </>
-          )}
+          
+          <li 
+            onClick={() => setView('roadmap')}
+            className={`px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-3 ${view === 'roadmap' ? 'bg-primary text-white shadow-md' : 'text-text-sub hover:bg-bg-main'}`}
+          >
+            <BookOpen className="w-4 h-4" />
+            Lộ trình cá nhân
+          </li>
+
+          <li 
+            onClick={() => setView('aitutor')}
+            className={`px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-3 ${view === 'aitutor' ? 'bg-primary text-white shadow-md' : 'text-text-sub hover:bg-bg-main'}`}
+          >
+            <Bot className="w-4 h-4" />
+            Gia sư ảo AI
+          </li>
+
           {user.role === 'teacher' && (
             <li 
               onClick={() => setView('dashboard')}
