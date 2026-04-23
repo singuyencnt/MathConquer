@@ -20,6 +20,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   const [clearing, setClearing] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClass, setSelectedClass] = useState<string>('all');
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [isReplying, setIsReplying] = useState<Record<string, boolean>>({});
 
@@ -84,6 +85,32 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       console.error("Error fetching student assessments:", error);
     } finally {
       setLoadingDetails(false);
+    }
+  };
+
+  const handleDeleteStudent = async (studentId: string, studentName: string) => {
+    if (!confirm(`Bạn có chắc chắn muốn xóa học sinh ${studentName}? Hành động này sẽ xóa vĩnh viễn tài khoản và toàn bộ lộ trình của học sinh này.`)) return;
+
+    try {
+      const batch = writeBatch(db);
+      
+      // Delete user doc
+      batch.delete(doc(db, 'users', studentId));
+      
+      // Delete all assessments for this user
+      const q = query(collection(db, 'assessments'), where('userId', '==', studentId));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.docs.forEach(d => {
+        batch.delete(d.ref);
+      });
+      
+      await batch.commit();
+      
+      setStudents(prev => prev.filter(s => s.uid !== studentId));
+      alert(`Đã xóa học sinh ${studentName} thành công.`);
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      alert("Có lỗi xảy ra khi xóa học sinh.");
     }
   };
 
@@ -413,10 +440,14 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
     return Math.round((completed / assessment.tasks.length) * 100);
   };
 
-  const filteredStudents = students.filter(s => 
-    s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (s.className && s.className.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const classes = ['all', ...Array.from(new Set(students.map(s => s.className?.trim().toUpperCase()).filter(Boolean)))];
+
+  const filteredStudents = students.filter(s => {
+    const matchesSearch = s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         (s.className && s.className.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesClass = selectedClass === 'all' || s.className?.trim().toUpperCase() === selectedClass;
+    return matchesSearch && matchesClass;
+  });
 
   if (loading) {
     return (
@@ -474,43 +505,73 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
               </div>
             </div>
 
-            <div className="geometric-card !p-4 flex items-center gap-3">
-              <Search className="w-5 h-5 text-text-sub" />
-              <input 
-                type="text" 
-                placeholder="Tìm kiếm theo tên hoặc lớp..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 outline-none text-text-main text-sm font-medium"
-              />
-              <div className="bg-stage-bg px-3 py-1 rounded-full text-primary text-[0.65rem] font-bold flex items-center gap-2 uppercase tracking-widest">
-                <Users className="w-3 h-3" />
-                {filteredStudents.length} học sinh
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="geometric-card !p-4 flex items-center gap-3 flex-1">
+                <Search className="w-5 h-5 text-text-sub" />
+                <input 
+                  type="text" 
+                  placeholder="Tìm kiếm theo tên hoặc lớp..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="flex-1 outline-none text-text-main text-sm font-medium"
+                />
+              </div>
+
+              <div className="geometric-card !p-4 flex items-center gap-3 min-w-[200px]">
+                <Users className="w-5 h-5 text-text-sub" />
+                <select 
+                  value={selectedClass}
+                  onChange={(e) => setSelectedClass(e.target.value)}
+                  className="flex-1 outline-none text-text-main text-sm font-bold bg-transparent"
+                >
+                  <option value="all">Tất cả các lớp</option>
+                  {classes.filter(c => c !== 'all').sort().map(className => (
+                    <option key={className} value={className}>{className}</option>
+                  ))}
+                </select>
+                <div className="bg-stage-bg px-3 py-1 rounded-full text-primary text-[0.65rem] font-bold flex items-center gap-2 uppercase tracking-widest whitespace-nowrap">
+                  {filteredStudents.length} học sinh
+                </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredStudents.map((student) => (
-                <button
+                <div
                   key={student.uid}
-                  onClick={() => handleViewStudent(student)}
-                  className="geometric-card hover:border-primary hover:shadow-lg transition-all text-left group"
+                  className="geometric-card hover:border-primary hover:shadow-lg transition-all text-left group relative flex flex-col"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-12 h-12 bg-stage-bg rounded-lg flex items-center justify-center text-primary font-bold text-xl">
                       {student.fullName.charAt(0)}
                     </div>
-                    <span className="px-2.5 py-1 bg-bg-main text-text-sub text-[0.65rem] font-bold rounded-md border border-border-main uppercase tracking-wider">
-                      Lớp {student.className || 'N/A'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 bg-bg-main text-text-sub text-[0.65rem] font-bold rounded-md border border-border-main uppercase tracking-wider">
+                        Lớp {student.className || 'N/A'}
+                      </span>
+                      {user.email === 'minhkhoiklk@gmail.com' && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteStudent(student.uid, student.fullName);
+                          }}
+                          className="p-1 px-2.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-md border border-red-100 transition-all"
+                          title="Xóa học sinh"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <h3 className="font-bold text-text-main group-hover:text-primary transition-colors tracking-tight">{student.fullName}</h3>
-                  <p className="text-xs text-text-sub mb-6">{student.email}</p>
-                  <div className="flex items-center justify-between text-[0.65rem] font-bold text-text-sub uppercase tracking-widest pt-4 border-t border-border-main">
+                  <div className="cursor-pointer flex-1" onClick={() => handleViewStudent(student)}>
+                    <h3 className="font-bold text-text-main group-hover:text-primary transition-colors tracking-tight">{student.fullName}</h3>
+                    <p className="text-xs text-text-sub mb-6">{student.email}</p>
+                  </div>
+                  <div className="flex items-center justify-between text-[0.65rem] font-bold text-text-sub uppercase tracking-widest pt-4 border-t border-border-main mt-auto">
                     <span>Tham gia: {student.createdAt?.toDate ? new Date(student.createdAt.toDate()).toLocaleDateString('vi-VN') : 'N/A'}</span>
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform text-primary" />
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </motion.div>
