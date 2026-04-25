@@ -390,6 +390,96 @@ export default function RoadmapView({ user, onBack }: Props) {
                       <div className="text-xl font-black text-text-main">{selectedRoadmap.casioSkill}</div>
                     </div>
                   </div>
+
+                  {/* Detailed Capacity Analysis (New Section) */}
+                  <div className="p-8 border-t border-border-main bg-slate-50/30">
+                    <div className="flex items-center gap-2 mb-6">
+                      <div className="w-2 h-6 bg-primary rounded-full"></div>
+                      <h3 className="font-extrabold text-text-main uppercase tracking-tight text-lg">Phân tích năng lực đầu vào</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                      {/* Topic Confidence Table */}
+                      <div className="space-y-4">
+                        <h4 className="text-[0.7rem] font-black text-text-sub uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-success" />
+                          Mức độ tự tin theo chuyên đề
+                        </h4>
+                        <div className="bg-white border border-border-main rounded-xl overflow-hidden shadow-sm">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="bg-slate-100 border-b border-border-main uppercase tracking-widest font-black text-text-sub">
+                                <th className="px-4 py-3">Chuyên đề</th>
+                                <th className="px-4 py-3">Mức độ tự tin</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border-main">
+                              {Object.entries(selectedRoadmap.topicConfidence || {}).length > 0 ? (
+                                Object.entries(selectedRoadmap.topicConfidence).map(([topic, level]) => (
+                                  <tr key={topic} className="hover:bg-slate-50 transition-colors">
+                                    <td className="px-4 py-3 font-bold text-text-main">{topic}</td>
+                                    <td className="px-4 py-3">
+                                      <span className={`px-2 py-0.5 rounded-md font-bold text-[0.6rem] uppercase tracking-tighter ${
+                                        level === 'Rất tự tin' ? 'bg-green-100 text-green-700' :
+                                        level === 'Tự tin' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-orange-100 text-orange-700'
+                                      }`}>
+                                        {level}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan={2} className="px-4 py-8 text-center text-text-sub italic">Chưa có dữ liệu đánh giá chi tiết.</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Barriers & Focus */}
+                      <div className="space-y-6">
+                        <div className="space-y-3">
+                          <h4 className="text-[0.7rem] font-black text-text-sub uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Frown className="w-4 h-4 text-red-500" />
+                            Rào cản học tập hiện tại
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedRoadmap.barriers && selectedRoadmap.barriers.length > 0 ? (
+                              selectedRoadmap.barriers.map(barrier => (
+                                <span key={barrier} className="px-3 py-1.5 bg-red-50 border border-red-100 text-red-700 text-[0.7rem] font-bold rounded-lg shadow-sm">
+                                  {barrier}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-text-sub text-xs italic">Không có rào cản đặc biệt nào được ghi nhận.</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h4 className="text-[0.7rem] font-black text-text-sub uppercase tracking-[0.2em] flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-purple-600" />
+                            Ưu tiên trọng tâm giai đoạn này
+                          </h4>
+                          <div className="p-4 bg-purple-50 border border-purple-100 rounded-xl">
+                            <p className="text-purple-900 font-bold text-sm leading-relaxed">
+                              {selectedRoadmap.roadmapFocus || 'Chưa xác định trọng tâm ưu tiên.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-start gap-3">
+                          <Quote className="w-5 h-5 text-orange-400 shrink-0 mt-1" />
+                          <div className="text-[0.7rem] text-orange-800 font-medium leading-relaxed italic">
+                            Lời khuyên từ MATHCONQUER: Tập trung giải quyết các chuyên đề có mức tự tin "Chưa tự tin" nhưng có sự xuất hiện nhiều trong đề tốt nghiệp.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Main Content Markdown */}

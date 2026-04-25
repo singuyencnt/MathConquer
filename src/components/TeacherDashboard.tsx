@@ -191,6 +191,26 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         3: [2, 3, 6, 9, 10] // Tích phân, Số phức, Oxyz, Dãy số, Giới hạn
       };
 
+      const ROADMAP_FOCUS_OPTIONS = [
+        "Lấy gốc và củng cố căn bản: Tập trung kỹ lý thuyết và các câu dễ (Mục tiêu 6-7 điểm).",
+        "Rèn luyện kỹ năng bài tập: Cân bằng giữa lý thuyết và các dạng toán mức độ hiểu, vận dụng (Mục tiêu 8 điểm).",
+        "Chinh phục câu hỏi phân hóa: Đi sâu vào các dạng bài khó và cực khó (Mục tiêu 9+).",
+        "Tối ưu kỹ năng phòng tránh bẫy: Rèn luyện độ chính xác, tránh sai sót ở các câu dễ và biết cách phân bổ thời gian."
+      ];
+
+      const BARRIER_OPTIONS = [
+        "Lỗ hổng kiến thức căn bản.",
+        "Mất tập trung khi tự học.",
+        "Thiếu tài liệu ôn tập chất lượng.",
+        "Áp lực tâm lý, sợ sai.",
+        "Không biết cách phân bổ thời gian.",
+        "Kỹ năng bấm máy Casio còn yếu.",
+        "Khó khăn khi giải bài tập Vận dụng cao.",
+        "Hay sai sót ở các câu hỏi dễ."
+      ];
+
+      const CONFIDENCE_LEVELS = ["Rất tự tin", "Tự tin", "Chưa tự tin"];
+
       const FEELINGS = ['Tốt', 'Bình thường', 'Cần cố gắng'] as const;
       const LOG_TEMPLATES = [
         "Hôm nay em đã ôn tập xong phần lý thuyết và làm được 20 câu trắc nghiệm.",
@@ -373,16 +393,28 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
               const cleanDailyTime = (stageAs.dailyTime && stageAs.dailyTime >= 45) ? stageAs.dailyTime : (60 + Math.floor(Math.random() * 60));
               const cleanDuration = stageAs.durationWeeks || randomWeeks;
               
+              // New dummy data for missing fields
+              const dummyConfidence: Record<string, string> = {};
+              STAGE_TOPICS[stageNum as 1|2|3].forEach(idx => {
+                dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
+              });
+              const dummyBarriers = [...BARRIER_OPTIONS].sort(() => Math.random() - 0.5).slice(0, 2);
+              const dummyFocus = ROADMAP_FOCUS_OPTIONS[Math.floor(Math.random() * ROADMAP_FOCUS_OPTIONS.length)];
+
               const updatedData: Partial<AssessmentData> = {
                 targetScore: cleanTargetScore,
                 dailyTime: cleanDailyTime,
                 tasks: tasks,
                 learningLogs: logs,
+                topicConfidence: stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0 ? stageAs.topicConfidence : dummyConfidence,
+                barriers: stageAs.barriers && stageAs.barriers.length > 0 ? stageAs.barriers : dummyBarriers,
+                roadmapFocus: stageAs.roadmapFocus || dummyFocus,
                 roadmap: generateRichRoadmap(stageNum, student, { 
                   ...stageAs, 
                   targetScore: cleanTargetScore, 
                   dailyTime: cleanDailyTime,
-                  durationWeeks: cleanDuration
+                  durationWeeks: cleanDuration,
+                  barriers: stageAs.barriers && stageAs.barriers.length > 0 ? stageAs.barriers : dummyBarriers
                 }),
                 durationWeeks: cleanDuration
               };
@@ -395,26 +427,30 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
             const endScore = Math.round((midScore + (Math.random() * 1.5)) * 10) / 10;
             const targetScore = Math.min(10, Math.round((endScore + 1.2) * 2) / 2);
             
-            const tempAs: Partial<AssessmentData> = {
-              scores: { midHK1: midScore, endHK1: endScore },
-              targetScore: targetScore,
-              dailyTime: 60 + Math.floor(Math.random() * 60),
-              durationWeeks: randomWeeks,
-              barriers: ['lo lắng về kiến thức lý thuyết và các câu hỏi vận dụng cao']
-            };
+            const dummyConfidence: Record<string, string> = {};
+            STAGE_TOPICS[stageNum as 1|2|3].forEach(idx => {
+              dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
+            });
+            const dummyBarriers = [...BARRIER_OPTIONS].sort(() => Math.random() - 0.5).slice(0, 2);
+            const dummyFocus = ROADMAP_FOCUS_OPTIONS[Math.floor(Math.random() * ROADMAP_FOCUS_OPTIONS.length)];
 
             const newAs: AssessmentData = {
               userId: studentId,
               stage: stageNum,
-              scores: tempAs.scores!,
-              targetScore: tempAs.targetScore!,
-              dailyTime: tempAs.dailyTime!,
+              scores: { midHK1: Math.round((5 + Math.random() * 3) * 10) / 10, endHK1: Math.round((6 + Math.random() * 3) * 10) / 10 },
+              targetScore: Math.min(10, Math.round((8 + Math.random() * 2) * 2) / 2),
+              dailyTime: 60 + Math.floor(Math.random() * 60),
               examType: 'Xét đại học',
-              topicConfidence: {},
-              casioSkill: 'Cơ bản',
-              barriers: tempAs.barriers!,
-              roadmapFocus: 'Tổng ôn toàn diện bám sát cấu trúc đề thi tốt nghiệp THPT.',
-              roadmap: generateRichRoadmap(stageNum, student, tempAs),
+              topicConfidence: dummyConfidence,
+              casioSkill: ['Thành thạo', 'Biết cơ bản', 'Chưa biết dùng'][Math.floor(Math.random() * 3)],
+              barriers: dummyBarriers,
+              roadmapFocus: dummyFocus,
+              roadmap: generateRichRoadmap(stageNum, student, {
+                barriers: dummyBarriers,
+                targetScore: 9.0,
+                dailyTime: 60,
+                durationWeeks: randomWeeks
+              }),
               tasks: tasks,
               learningLogs: logs,
               durationWeeks: randomWeeks,
@@ -646,6 +682,79 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
                         )}
                       </div>
                     </div>
+                    
+                    {/* Detailed Analysis for Teacher */}
+                    <div className="px-8 md:px-10 py-6 bg-slate-50/50 border-b border-border-main">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Topic confidence */}
+                        <div className="space-y-3">
+                          <h5 className="text-[0.6rem] font-black text-text-sub uppercase tracking-widest flex items-center gap-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                            Đánh giá năng lực chuyên đề
+                          </h5>
+                          <div className="bg-white border border-border-main rounded-xl overflow-hidden shadow-sm">
+                            <table className="w-full text-left text-[0.7rem]">
+                              <tbody className="divide-y divide-border-main">
+                                {Object.entries(assessment.topicConfidence || {}).length > 0 ? (
+                                  Object.entries(assessment.topicConfidence).map(([topic, level]) => (
+                                    <tr key={topic}>
+                                      <td className="px-3 py-2 font-bold text-text-main">{topic}</td>
+                                      <td className="px-3 py-2 text-right">
+                                        <span className={`px-2 py-0.5 rounded-md font-bold text-[0.55rem] uppercase ${
+                                          level === 'Rất tự tin' ? 'bg-green-100 text-green-700' :
+                                          level === 'Tự tin' ? 'bg-blue-100 text-blue-700' :
+                                          'bg-orange-100 text-orange-700'
+                                        }`}>
+                                          {level}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td className="px-3 py-4 text-center text-text-sub italic">Chưa có dữ liệu.</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* Barriers & Roadmap Focus */}
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <h5 className="text-[0.6rem] font-black text-text-sub uppercase tracking-widest flex items-center gap-2">
+                              <Frown className="w-3.5 h-3.5 text-red-500" />
+                              Rào cản học sinh gặp phải
+                            </h5>
+                            <div className="flex flex-wrap gap-1.5">
+                              {assessment.barriers && assessment.barriers.length > 0 ? (
+                                assessment.barriers.map(b => (
+                                  <span key={b} className="px-2 py-1 bg-red-50 text-red-700 text-[0.6rem] font-bold rounded-md border border-red-100">
+                                    {b}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-xs italic text-text-sub">Không có rào cản.</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h5 className="text-[0.6rem] font-black text-text-sub uppercase tracking-widest flex items-center gap-2">
+                              <Target className="w-3.5 h-3.5 text-primary" />
+                              Trọng tâm lộ trình yêu cầu
+                            </h5>
+                            <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                              <p className="text-blue-900 font-bold text-[0.7rem] leading-relaxed">
+                                {assessment.roadmapFocus || 'Chưa xác định.'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="p-8 md:p-10">
                       <div className="space-y-8">
                         <div className="bg-slate-50 border border-border-main p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
