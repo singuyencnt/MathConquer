@@ -27,6 +27,7 @@ export async function generateRoadmap(assessmentData: any) {
     - Thời gian học mỗi ngày: ${assessmentData.dailyTime || 60} phút
     - Điểm số hiện tại (các kỳ thi): ${JSON.stringify(assessmentData.scores || {})}
     - PHIẾU TỰ ĐÁNH GIÁ NĂNG LỰC (Mức độ tự tin theo chuyên đề): ${JSON.stringify(assessmentData.topicConfidence || {})}
+    - TRỌNG TÂM LỘ TRÌNH ƯU TIÊN: ${assessmentData.roadmapFocus || 'Không xác định'}
     - Rào cản tự học: ${(assessmentData.barriers || []).join(", ") || 'Không có'}
 
     YÊU CẦU QUAN TRỌNG VỀ XƯNG HÔ VÀ TRÌNH BÀY:

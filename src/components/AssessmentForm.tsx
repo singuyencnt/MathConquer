@@ -66,12 +66,11 @@ const BARRIERS = [
   "Quên công thức nhanh."
 ];
 
-const AI_ROLES = [
-  "Giải thích lý thuyết đơn giản, dễ hiểu.",
-  "Giải bài tập chi tiết khi được yêu cầu.",
-  "Hướng dẫn cách giải chứ không đưa ra đáp án ngay.",
-  "Cung cấp các dạng bài tập tương tự để luyện tập.",
-  "Hướng dẫn các mẹo giải nhanh và bấm máy tính Casio."
+const ROADMAP_FOCUS = [
+  "Lấy gốc và củng cố căn bản: Tập trung kỹ lý thuyết và các câu dễ (Mục tiêu 6-7 điểm).",
+  "Rèn luyện kỹ năng bài tập: Cân bằng giữa lý thuyết và các dạng toán mức độ hiểu, vận dụng (Mục tiêu 8 điểm).",
+  "Chinh phục câu hỏi phân hóa: Đi sâu vào các dạng bài khó và cực khó (Mục tiêu 9+).",
+  "Tối ưu kỹ năng phòng tránh bẫy: Rèn luyện độ chính xác, tránh sai sót ở các câu dễ và biết cách phân bổ thời gian."
 ];
 
 export default function AssessmentForm({ stage, user, onComplete, onBack }: Props) {
@@ -87,7 +86,7 @@ export default function AssessmentForm({ stage, user, onComplete, onBack }: Prop
     topicConfidence: {},
     casioSkill: 'Biết cơ bản',
     barriers: [],
-    aiRole: AI_ROLES[0],
+    roadmapFocus: ROADMAP_FOCUS[0],
     createdAt: null
   });
 
@@ -355,18 +354,18 @@ export default function AssessmentForm({ stage, user, onComplete, onBack }: Prop
               </div>
 
               <div className="space-y-4">
-                <label className="text-xs font-bold text-text-sub uppercase tracking-wider">3. Vai trò AI mong muốn</label>
+                <label className="text-xs font-bold text-text-sub uppercase tracking-wider">3. Trong giai đoạn này, em muốn ưu tiên điều gì nhất?</label>
                 <div className="space-y-2">
-                  {AI_ROLES.map(role => (
+                  {ROADMAP_FOCUS.map(focus => (
                     <button
-                      key={role}
-                      onClick={() => setFormData({...formData, aiRole: role})}
-                      className={`w-full text-left px-4 py-3 rounded-lg border transition-all flex items-center gap-3 ${formData.aiRole === role ? 'bg-stage-bg border-primary text-primary' : 'bg-white border-border-main text-text-sub hover:border-primary'}`}
+                      key={focus}
+                      onClick={() => setFormData({...formData, roadmapFocus: focus})}
+                      className={`w-full text-left px-4 py-3 rounded-lg border transition-all flex items-center gap-3 ${formData.roadmapFocus === focus ? 'bg-stage-bg border-primary text-primary' : 'bg-white border-border-main text-text-sub hover:border-primary'}`}
                     >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${formData.aiRole === role ? 'bg-primary border-primary text-white' : 'border-border-main'}`}>
-                        {formData.aiRole === role && <div className="w-2 h-2 bg-white rounded-full" />}
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${formData.roadmapFocus === focus ? 'bg-primary border-primary text-white' : 'border-border-main'}`}>
+                        {formData.roadmapFocus === focus && <div className="w-2 h-2 bg-white rounded-full" />}
                       </div>
-                      <span className="text-sm font-medium">{role}</span>
+                      <span className="text-sm font-medium">{focus}</span>
                     </button>
                   ))}
                 </div>

@@ -27,7 +27,7 @@ service cloud.firestore {
     //   - topicConfidence: map
     //   - casioSkill: string
     //   - barriers: list
-    //   - aiRole: string
+    //   - roadmapFocus: string
     //   - roadmap: string
     //   - createdAt: timestamp (required)
     //

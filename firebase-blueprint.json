@@ -39,7 +39,7 @@
         },
         "casioSkill": { "type": "string", "enum": ["Thành thạo", "Biết cơ bản", "Chưa biết dùng"] },
         "barriers": { "type": "array", "items": { "type": "string" } },
-        "aiRole": { "type": "string" },
+        "roadmapFocus": { "type": "string", "description": "Trọng tâm lộ trình học sinh mong muốn" },
         "roadmap": { "type": "string", "description": "Lộ trình chi tiết do AI tạo ra" },
         "tasks": {
           "type": "array",

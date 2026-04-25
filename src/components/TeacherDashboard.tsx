@@ -413,7 +413,7 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
               topicConfidence: {},
               casioSkill: 'Cơ bản',
               barriers: tempAs.barriers!,
-              aiRole: 'Thân thiện',
+              roadmapFocus: 'Tổng ôn toàn diện bám sát cấu trúc đề thi tốt nghiệp THPT.',
               roadmap: generateRichRoadmap(stageNum, student, tempAs),
               tasks: tasks,
               learningLogs: logs,
@@ -638,6 +638,12 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
                           <Calendar className="w-3 h-3" />
                           {assessment.dailyTime}p/ngày
                         </div>
+                        {assessment.roadmapFocus && (
+                          <div className="flex items-center gap-1 text-purple-600">
+                             <Sparkles className="w-3 h-3" />
+                             {assessment.roadmapFocus}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="p-8 md:p-10">

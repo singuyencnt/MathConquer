@@ -49,7 +49,7 @@ export interface AssessmentData {
   topicConfidence: Record<string, string>;
   casioSkill: string;
   barriers: string[];
-  aiRole: string;
+  roadmapFocus: string;
   roadmap?: string;
   tasks?: RoadmapTask[];
   learningLogs?: LearningLog[];
