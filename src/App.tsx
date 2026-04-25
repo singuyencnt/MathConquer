@@ -8,7 +8,7 @@ import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously } from 'firebase/auth';
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { UserProfile, Role, AssessmentData } from './types';
-import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare, Sparkles } from 'lucide-react';
+import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare, Sparkles, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AssessmentForm from './components/AssessmentForm';
 import TeacherDashboard from './components/TeacherDashboard';
@@ -496,27 +496,49 @@ export default function App() {
                   </div>
                 </section>
 
-                {/* Quick Access AI Tutor */}
-                {user.role === 'student' && (
-                  <section className="bg-white border border-border-main rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-                    <div className="w-20 h-20 bg-stage-bg rounded-2xl flex items-center justify-center shrink-0 border border-primary/10">
-                      <Bot className="w-10 h-10 text-primary" />
-                    </div>
-                    <div className="flex-1 text-center md:text-left">
-                      <h3 className="font-black text-text-main uppercase tracking-tight text-lg mb-2">Gia sư ảo AI - Hỗ trợ giải bài tập</h3>
-                      <p className="text-sm text-text-sub font-medium leading-relaxed">
-                        Chụp ảnh đề bài hoặc nhập câu hỏi, Gia sư AI sẽ hướng dẫn bạn phương pháp giải chi tiết, 
-                        nhắc lại kiến thức lý thuyết liên quan để bạn tự tin chinh phục mọi bài toán 12.
-                      </p>
-                    </div>
-                    <button 
-                      onClick={() => setView('aitutor')}
-                      className="bg-primary text-white font-black py-4 px-8 rounded-xl hover:bg-blue-700 transition-all uppercase tracking-widest text-xs flex items-center gap-3 whitespace-nowrap shadow-lg shadow-blue-100"
-                    >
-                      Bắt đầu chat ngay
-                      <MessageSquare className="w-4 h-4" />
-                    </button>
-                  </section>
+                {/* Quick Access AI Tutor & Review Materials */}
+                {(user.role === 'student' || user.role === 'teacher') && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <section className="bg-white border border-border-main rounded-3xl p-8 flex flex-col sm:flex-row items-center gap-6 shadow-sm">
+                      <div className="w-16 h-16 bg-stage-bg rounded-2xl flex items-center justify-center shrink-0 border border-primary/10">
+                        <Bot className="w-8 h-8 text-primary" />
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <h3 className="font-black text-text-main uppercase tracking-tight text-base mb-1">Gia sư ảo AI hỗ trợ</h3>
+                        <p className="text-[0.7rem] text-text-sub font-medium leading-relaxed">
+                          Chụp ảnh đề bài hoặc nhập câu hỏi, Gia sư AI sẽ hướng dẫn bạn phương pháp giải chi tiết, nhắc lại kiến thức lý thuyết liên quan để bạn tự tin chinh phục mọi bài toán 12.
+                        </p>
+                        <button 
+                          onClick={() => setView('aitutor')}
+                          className="mt-4 text-primary font-black uppercase tracking-widest text-[0.6rem] flex items-center gap-2 hover:gap-3 transition-all"
+                        >
+                          Bắt đầu chat ngay
+                          <MessageSquare className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </section>
+
+                    <section className="bg-white border border-border-main rounded-3xl p-8 flex flex-col sm:flex-row items-center gap-6 shadow-sm border-b-4 border-b-accent">
+                      <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center shrink-0 border border-accent/10">
+                        <BookOpen className="w-8 h-8 text-accent" />
+                      </div>
+                      <div className="flex-1 text-center sm:text-left">
+                        <h3 className="font-black text-text-main uppercase tracking-tight text-base mb-1">Tài liệu ôn tập chuẩn</h3>
+                        <p className="text-[0.7rem] text-text-sub font-medium leading-relaxed">
+                          Hệ thống Lý thuyết và Câu hỏi, Bài tập phân theo mức độ cùng với Đề thi theo từng chủ đề, bám sát cấu trúc, nội dung thi tốt nghiệp THPT môn Toán.
+                        </p>
+                        <a 
+                          href="https://singuyencnt.github.io/On_tap_toan_THPT/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-4 w-fit bg-accent text-white font-black py-2.5 px-6 rounded-lg hover:bg-orange-600 transition-all uppercase tracking-widest text-[0.6rem] flex items-center gap-2 shadow-lg shadow-orange-100"
+                        >
+                          Bắt đầu ôn tập
+                          <ChevronRight className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </section>
+                  </div>
                 )}
 
                 {/* Stages Tabs Section */}
