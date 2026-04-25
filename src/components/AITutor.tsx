@@ -113,7 +113,7 @@ export default function AITutor({ user, onBack }: AITutorProps) {
 
       {/* Chat Area */}
       <div className="flex-1 bg-white border border-border-main rounded-2xl overflow-hidden flex flex-col shadow-sm">
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-6 custom-scrollbar">
           {messages.map((msg, index) => (
             <motion.div
               key={index}
@@ -121,7 +121,7 @@ export default function AITutor({ user, onBack }: AITutorProps) {
               animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`flex gap-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={`flex gap-2 md:gap-3 max-w-[95%] md:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm ${
                   msg.role === 'user' ? 'bg-primary text-white' : 'bg-stage-bg text-primary border border-primary/10'
                 }`}>

@@ -8,7 +8,7 @@ import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously } from 'firebase/auth';
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { UserProfile, Role, AssessmentData } from './types';
-import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare, Sparkles, ChevronRight } from 'lucide-react';
+import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare, Sparkles, ChevronRight, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AssessmentForm from './components/AssessmentForm';
 import TeacherDashboard from './components/TeacherDashboard';
@@ -22,6 +22,7 @@ export default function App() {
   const [hasSetInitialView, setHasSetInitialView] = useState(false);
   const [selectedStage, setSelectedStage] = useState<number>(1);
   const [latestAssessment, setLatestAssessment] = useState<AssessmentData | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Set initial view based on role once after login
   useEffect(() => {
@@ -378,18 +379,39 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg-main flex">
+      {/* Sidebar Overlay for Mobile */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <nav className="w-64 bg-card border-r border-border-main p-8 flex flex-col gap-10 hidden lg:flex">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('home')}>
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
-            <GraduationCap className="w-6 h-6 text-white" />
+      <nav className={`fixed inset-y-0 left-0 w-72 bg-card border-r border-border-main p-8 flex flex-col gap-10 z-50 transition-transform duration-300 transform lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:flex'}`}>
+        <div className="flex items-center justify-between lg:justify-start gap-3">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setView('home'); setIsSidebarOpen(false); }}>
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+              <GraduationCap className="w-6 h-6 text-white" />
+            </div>
+            <span className="font-black text-xl text-text-main tracking-tighter">MATHCONQUER</span>
           </div>
-          <span className="font-black text-xl text-text-main tracking-tighter">MATHCONQUER</span>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="p-2 text-text-sub hover:text-primary lg:hidden"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
         
         <ul className="flex flex-col gap-3">
           <li 
-            onClick={() => setView('home')}
+            onClick={() => { setView('home'); setIsSidebarOpen(false); }}
             className={`px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-3 ${view === 'home' ? 'bg-primary text-white shadow-md' : 'text-text-sub hover:bg-bg-main'}`}
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -397,7 +419,7 @@ export default function App() {
           </li>
           
           <li 
-            onClick={() => setView('roadmap')}
+            onClick={() => { setView('roadmap'); setIsSidebarOpen(false); }}
             className={`px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-3 ${view === 'roadmap' ? 'bg-primary text-white shadow-md' : 'text-text-sub hover:bg-bg-main'}`}
           >
             <BookOpen className="w-4 h-4" />
@@ -405,7 +427,7 @@ export default function App() {
           </li>
 
           <li 
-            onClick={() => setView('aitutor')}
+            onClick={() => { setView('aitutor'); setIsSidebarOpen(false); }}
             className={`px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-3 ${view === 'aitutor' ? 'bg-primary text-white shadow-md' : 'text-text-sub hover:bg-bg-main'}`}
           >
             <Bot className="w-4 h-4" />
@@ -414,7 +436,7 @@ export default function App() {
 
           {user.role === 'teacher' && (
             <li 
-              onClick={() => setView('dashboard')}
+              onClick={() => { setView('dashboard'); setIsSidebarOpen(false); }}
               className={`px-4 py-3 rounded-xl text-sm font-bold cursor-pointer transition-all flex items-center gap-3 ${view === 'dashboard' ? 'bg-primary text-white shadow-md' : 'text-text-sub hover:bg-bg-main'}`}
             >
               <Users className="w-4 h-4" />
@@ -429,9 +451,15 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-20 px-8 flex items-center justify-between bg-white border-b border-border-main sticky top-0 z-20">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-text-main uppercase">
+        <header className="h-20 px-4 md:px-8 flex items-center justify-between bg-white border-b border-border-main sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 text-text-sub hover:text-primary lg:hidden transition-colors"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <h1 className="text-sm md:text-xl font-bold tracking-tight text-text-main uppercase truncate">
               {view === 'home' ? 'Hệ thống học tập' : 
                view === 'assessment' ? `Đánh giá Giai đoạn ${selectedStage}` : 
                view === 'roadmap' ? 'Lộ trình cá nhân' : 
@@ -439,15 +467,15 @@ export default function App() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 border-r border-border-main pr-6">
-              <div className="text-right">
-                <div className="font-bold text-sm text-text-main">{user.fullName}</div>
+          <div className="flex items-center gap-2 md:gap-6">
+            <div className="flex items-center gap-3 md:border-r border-border-main md:pr-6">
+              <div className="text-right hidden sm:block">
+                <div className="font-bold text-sm text-text-main truncate max-w-[120px]">{user.fullName}</div>
                 <div className="text-[0.7rem] font-bold text-primary uppercase tracking-tighter">
                   {user.role === 'teacher' ? 'Giáo viên' : `Lớp ${user.className}`}
                 </div>
               </div>
-              <div className="w-10 h-10 bg-stage-bg rounded-lg flex items-center justify-center font-bold text-primary border border-primary/10">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-stage-bg rounded-lg flex items-center justify-center font-bold text-primary border border-primary/10 shrink-0">
                 {user.fullName.charAt(0)}
               </div>
             </div>
@@ -462,7 +490,7 @@ export default function App() {
         </header>
 
         {/* Content Scroll Area */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <AnimatePresence mode="wait">
             {view === 'home' && (
               <motion.div
