@@ -188,7 +188,8 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       const STAGE_TOPICS = {
         1: [0, 4, 7], // Hàm số, Đa diện, Lượng giác
         2: [1, 5, 8], // Mũ-Log, Tròn xoay, Tổ hợp
-        3: [2, 3, 6, 9, 10] // Tích phân, Số phức, Oxyz, Dãy số, Giới hạn
+        3: [2, 3, 6, 9, 10], // Tích phân, Số phức, Oxyz, Dãy số, Giới hạn
+        4: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] // Luyện đề tổng hợp
       };
 
       const ROADMAP_FOCUS_OPTIONS = [
@@ -387,7 +388,16 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
                                 (String(stageAs.targetScore).length > 4) ||
                                 (!stageAs.durationWeeks);
 
-            if (isError || isMessyData) {
+            const isMissingSpecifics = !stageAs.topicConfidence || 
+                                     Object.keys(stageAs.topicConfidence).length === 0 || 
+                                     !stageAs.barriers || 
+                                     stageAs.barriers.length === 0 || 
+                                     !stageAs.roadmapFocus;
+
+            // Updated condition: Always update if requested through "Beautify"
+            const needsUpdate = isError || isMessyData || isMissingSpecifics;
+
+            if (needsUpdate) {
               const updateRef = doc(db, 'assessments', stageAs.id!);
               const cleanTargetScore = Math.round((stageAs.targetScore || 8.0) * 2) / 2;
               const cleanDailyTime = (stageAs.dailyTime && stageAs.dailyTime >= 45) ? stageAs.dailyTime : (60 + Math.floor(Math.random() * 60));
@@ -395,7 +405,8 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
               
               // New dummy data for missing fields
               const dummyConfidence: Record<string, string> = {};
-              STAGE_TOPICS[stageNum as 1|2|3].forEach(idx => {
+              const currentStageTopics = STAGE_TOPICS[stageNum as 1|2|3|4] || STAGE_TOPICS[1];
+              currentStageTopics.forEach(idx => {
                 dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
               });
               const dummyBarriers = [...BARRIER_OPTIONS].sort(() => Math.random() - 0.5).slice(0, 2);
@@ -406,15 +417,17 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
                 dailyTime: cleanDailyTime,
                 tasks: tasks,
                 learningLogs: logs,
-                topicConfidence: stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0 ? stageAs.topicConfidence : dummyConfidence,
-                barriers: stageAs.barriers && stageAs.barriers.length > 0 ? stageAs.barriers : dummyBarriers,
+                topicConfidence: (stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0) ? stageAs.topicConfidence : dummyConfidence,
+                barriers: (stageAs.barriers && stageAs.barriers.length > 0) ? stageAs.barriers : dummyBarriers,
                 roadmapFocus: stageAs.roadmapFocus || dummyFocus,
                 roadmap: generateRichRoadmap(stageNum, student, { 
                   ...stageAs, 
                   targetScore: cleanTargetScore, 
                   dailyTime: cleanDailyTime,
                   durationWeeks: cleanDuration,
-                  barriers: stageAs.barriers && stageAs.barriers.length > 0 ? stageAs.barriers : dummyBarriers
+                  barriers: (stageAs.barriers && stageAs.barriers.length > 0) ? stageAs.barriers : dummyBarriers,
+                  roadmapFocus: stageAs.roadmapFocus || dummyFocus,
+                  topicConfidence: (stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0) ? stageAs.topicConfidence : dummyConfidence,
                 }),
                 durationWeeks: cleanDuration
               };
@@ -465,8 +478,13 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
       await batch.commit();
       alert(`Thành công! Đã chuẩn hóa và tạo mới ${count} lộ trình cho ${students.length} học sinh.`);
       
+      // Re-fetch everything to ensure UI is in sync
       const querySnapshot = await getDocs(query(collection(db, 'users'), where('role', '==', 'student')));
       setStudents(querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile)));
+      
+      if (selectedStudent) {
+        handleViewStudent(selectedStudent);
+      }
     } catch (error: any) {
       console.error("Error seeding data:", error);
       alert(`Có lỗi xảy ra: ${error.message || "Không xác định"}`);
