@@ -70,6 +70,11 @@ export default function App() {
             const updatedUser = { ...userData, role: 'teacher' as const };
             await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
             setUser(updatedUser);
+          } else if (firebaseUser.email === 'minhkhoiklk@gmail.com' && userData.role === 'teacher') {
+            // Force demote minhkhoiklk to student role
+            const updatedUser = { ...userData, role: 'student' as const };
+            await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
+            setUser(updatedUser);
           } else {
             setUser(userData);
           }
