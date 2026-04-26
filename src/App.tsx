@@ -276,48 +276,74 @@ export default function App() {
     );
   }
 
-  // Onboarding for students without class info
-  if (user.role === 'student' && !user.className && view !== 'dashboard') {
+  // Onboarding for students without full name or class info
+  const needsOnboarding = user?.role === 'student' && (
+    !user.className || 
+    !user.fullName || 
+    user.fullName === 'Học sinh' || 
+    user.fullName.includes('User')
+  );
+
+  if (user && needsOnboarding && view !== 'dashboard') {
     return (
       <div className="min-h-screen bg-bg-main flex items-center justify-center p-4">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="geometric-card max-w-md w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="geometric-card max-w-md w-full !p-8"
         >
-          <h2 className="text-xl font-bold text-text-main mb-2">Hoàn tất thông tin</h2>
-          <p className="text-text-sub text-sm mb-6">Chào mừng {user.fullName}! Vui lòng cho biết lớp của bạn để bắt đầu.</p>
-          <div className="space-y-4">
+          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+            <UserIcon className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-2xl font-black text-text-main mb-2 text-center uppercase tracking-tight">Hoàn tất hồ sơ</h2>
+          <p className="text-text-sub text-sm mb-8 text-center font-medium">Chào mừng bạn đến với MATHCONQUER! Vui lòng cung cấp thông tin chính xác để bắt đầu học tập.</p>
+          
+          <form 
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const name = formData.get('fullName') as string;
+              const className = formData.get('className') as string;
+              
+              if (name && className) {
+                const updatedUser = { ...user, fullName: name, className: className };
+                await setDoc(doc(db, 'users', user.uid), updatedUser, { merge: true });
+                setUser(updatedUser);
+              } else {
+                alert("Vui lòng điền đầy đủ Họ tên và Lớp.");
+              }
+            }}
+            className="space-y-6"
+          >
             <div>
-              <label className="text-xs font-bold text-text-sub uppercase tracking-wider mb-1 block">Lớp của bạn</label>
+              <label className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.1em] mb-2 block">Họ và Tên</label>
               <input 
+                name="fullName"
                 type="text" 
-                placeholder="Ví dụ: 12A1" 
-                className="w-full border border-border-main rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary outline-none font-medium"
-                onKeyDown={async (e) => {
-                  if (e.key === 'Enter') {
-                    const val = (e.target as HTMLInputElement).value;
-                    if (val) {
-                      await setDoc(doc(db, 'users', user.uid), { ...user, className: val }, { merge: true });
-                      setUser({ ...user, className: val });
-                    }
-                  }
-                }}
+                defaultValue={user.fullName === 'Học sinh' ? '' : user.fullName}
+                placeholder="Nhập họ và tên của bạn..." 
+                required
+                className="w-full border-2 border-border-main rounded-xl px-4 py-4 focus:border-primary outline-none font-bold text-text-main bg-white transition-all"
+              />
+            </div>
+            <div>
+              <label className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.1em] mb-2 block">Lớp</label>
+              <input 
+                name="className"
+                type="text" 
+                placeholder="Ví dụ: 12A1..." 
+                required
+                className="w-full border-2 border-border-main rounded-xl px-4 py-4 focus:border-primary outline-none font-bold text-text-main bg-white transition-all"
               />
             </div>
             <button
-              onClick={async () => {
-                const input = document.querySelector('input') as HTMLInputElement;
-                if (input.value) {
-                  await setDoc(doc(db, 'users', user.uid), { ...user, className: input.value }, { merge: true });
-                  setUser({ ...user, className: input.value });
-                }
-              }}
-              className="w-full bg-primary text-white font-bold py-3 rounded-lg uppercase tracking-wider text-sm"
+              type="submit"
+              className="w-full bg-primary text-white font-black py-4 rounded-xl uppercase tracking-[0.15em] text-xs shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 mt-4"
             >
-              Xác nhận
+              <CheckCircle className="w-4 h-4" />
+              Bắt đầu ngay
             </button>
-          </div>
+          </form>
         </motion.div>
       </div>
     );

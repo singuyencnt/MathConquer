@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, getDocs, query, where, orderBy, writeBatch, updateDoc, doc } from 'firebase/firestore';
 import { UserProfile, AssessmentData, LearningLog } from '../types';
-import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2, Send, Quote, Sparkles } from 'lucide-react';
+import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2, Send, Quote, Sparkles, Edit2, X, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 
@@ -14,6 +14,9 @@ interface Props {
 export default function TeacherDashboard({ user, onBack }: Props) {
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<UserProfile | null>(null);
+  const [editingStudent, setEditingStudent] = useState<UserProfile | null>(null);
+  const [editForm, setEditForm] = useState({ fullName: '', className: '' });
+  const [isUpdating, setIsUpdating] = useState(false);
   const [studentAssessments, setStudentAssessments] = useState<AssessmentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -493,6 +496,33 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
     }
   };
 
+  const handleUpdateStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+
+    setIsUpdating(true);
+    try {
+      await updateDoc(doc(db, 'users', editingStudent.uid), {
+        fullName: editForm.fullName,
+        className: editForm.className
+      });
+      
+      setStudents(prev => prev.map(s => 
+        s.uid === editingStudent.uid 
+          ? { ...s, fullName: editForm.fullName, className: editForm.className }
+          : s
+      ));
+      
+      setEditingStudent(null);
+      alert("Cập nhật thông tin học sinh thành công!");
+    } catch (error) {
+      console.error("Error updating student:", error);
+      alert("Có lỗi xảy ra khi cập nhật thông tin.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const calculateStudentProgress = (assessment: AssessmentData) => {
     if (!assessment.tasks || assessment.tasks.length === 0) return 0;
     const completed = assessment.tasks.filter(t => t.completed).length;
@@ -519,6 +549,76 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
 
   return (
     <div className="max-w-6xl mx-auto">
+      {/* Edit Student Modal */}
+      <AnimatePresence>
+        {editingStudent && (
+          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="geometric-card w-full max-w-md bg-white !p-8 shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-primary">
+                    <Edit2 className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-xl font-black text-text-main uppercase tracking-tight">Sửa thông tin</h3>
+                </div>
+                <button 
+                  onClick={() => setEditingStudent(null)}
+                  className="p-2 hover:bg-bg-main rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-text-sub" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateStudent} className="space-y-6">
+                <div>
+                  <label className="text-[0.65rem] font-black text-text-sub uppercase tracking-wider mb-2 block">Họ và Tên</label>
+                  <input 
+                    type="text" 
+                    value={editForm.fullName}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, fullName: e.target.value }))}
+                    className="w-full border-2 border-border-main rounded-xl px-4 py-4 focus:border-primary outline-none font-bold text-text-main"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[0.65rem] font-black text-text-sub uppercase tracking-wider mb-2 block">Lớp</label>
+                  <input 
+                    type="text" 
+                    value={editForm.className}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, className: e.target.value }))}
+                    className="w-full border-2 border-border-main rounded-xl px-4 py-4 focus:border-primary outline-none font-bold text-text-main"
+                    required
+                  />
+                </div>
+                
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingStudent(null)}
+                    className="flex-1 px-6 py-4 bg-bg-main text-text-sub font-black rounded-xl uppercase tracking-widest text-[0.7rem] hover:bg-slate-200 transition-all"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdating}
+                    className="flex-[2] px-6 py-4 bg-primary text-white font-black rounded-xl uppercase tracking-widest text-[0.7rem] shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    Lưu thay đổi
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence mode="wait">
         {!selectedStudent ? (
           <motion.div
@@ -609,16 +709,29 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
                         Lớp {student.className || 'N/A'}
                       </span>
                       {user.email === 'singuyen.cnt@gmail.com' && (
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteStudent(student.uid, student.fullName);
-                          }}
-                          className="p-1 px-2.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-md border border-red-100 transition-all"
-                          title="Xóa học sinh"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingStudent(student);
+                              setEditForm({ fullName: student.fullName, className: student.className || '' });
+                            }}
+                            className="p-1 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-md border border-blue-100 transition-all"
+                            title="Sửa thông tin"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteStudent(student.uid, student.fullName);
+                            }}
+                            className="p-1 px-2.5 py-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-md border border-red-100 transition-all"
+                            title="Xóa học sinh"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
