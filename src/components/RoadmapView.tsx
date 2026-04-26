@@ -57,18 +57,30 @@ export default function RoadmapView({ user, onBack }: Props) {
     
     setExporting(true);
     try {
-      // Temporarily expand the element to its full height for capture if needed
       const element = roadmapRef.current;
+      
+      // Capture with higher quality and specific window width for best fit
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        windowWidth: 1200, // Fixed width for consistent layout in PDF
+        windowWidth: 1200, 
+        scrollY: 0, // CRITICAL: Ensure capture starts from top of element
         onclone: (clonedDoc) => {
+          const el = clonedDoc.querySelector('[ref="roadmapRef"]') || clonedDoc.body; // fallback
           // Hide elements that shouldn't be in the PDF
           const noPrintElements = clonedDoc.querySelectorAll('.no-print');
           noPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
+          
+          // Ensure the element is fully expanded and no extra margins
+          const target = clonedDoc.body.firstChild as HTMLElement;
+          if (target) {
+            target.style.height = 'auto';
+            target.style.overflow = 'visible';
+            target.style.margin = '0';
+            target.style.padding = '0';
+          }
         }
       });
       
@@ -76,16 +88,19 @@ export default function RoadmapView({ user, onBack }: Props) {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
+      
       const imgProps = pdf.getImageProperties(imgData);
       const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
       let heightLeft = imgHeight;
       let position = 0;
 
+      // Add first page
       pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
 
-      while (heightLeft >= 0) {
+      // Add remaining pages if any
+      while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
@@ -95,7 +110,7 @@ export default function RoadmapView({ user, onBack }: Props) {
       pdf.save(`Lo-Trinh-Toan-12-GD${selectedRoadmap.stage}-${user.fullName}.pdf`);
     } catch (error) {
       console.error("PDF Export failed:", error);
-      window.print(); // Fallback to basic print
+      alert("Xuất PDF thất bại. Bạn có thể sử dụng chức năng In của trình duyệt.");
     } finally {
       setExporting(false);
     }
@@ -355,37 +370,37 @@ export default function RoadmapView({ user, onBack }: Props) {
               </div>
 
               {/* PDF Content Root */}
-              <div ref={roadmapRef} className="space-y-8 bg-white print:p-8">
+              <div ref={roadmapRef} className="space-y-4 bg-white p-2">
                 {/* Summary Metadata Card */}
-                <div className="geometric-card overflow-hidden">
-                  <div className="bg-primary/5 p-8 border-b border-primary/10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="geometric-card overflow-hidden !shadow-none border-border-main">
+                  <div className="bg-primary/5 p-4 md:p-6 border-b border-primary/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="bg-primary text-white text-[0.65rem] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="bg-primary text-white text-[0.6rem] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
                             Giai đoạn {selectedRoadmap.stage}
                           </span>
-                          <span className="text-text-sub font-bold text-xs">
+                          <span className="text-text-sub font-bold text-[0.65rem]">
                             {new Date(selectedRoadmap.createdAt?.toDate?.() || Date.now()).toLocaleDateString('vi-VN')}
                           </span>
                         </div>
-                        <h2 className="text-2xl md:text-3xl font-black text-text-main tracking-tighter uppercase leading-tight">LỘ TRÌNH ÔN THI MATHCONQUER</h2>
-                        <p className="text-text-sub text-sm font-medium italic mt-1">Được thiết kế riêng cho: {user.fullName} - Lớp {user.className}</p>
+                        <h2 className="text-xl md:text-2xl font-black text-text-main tracking-tighter uppercase leading-tight">LỘ TRÌNH ÔN THI MATHCONQUER</h2>
+                        <p className="text-text-sub text-[0.7rem] font-medium italic">Được thiết kế riêng cho: {user.fullName} - Lớp {user.className}</p>
                       </div>
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-4">
                         <div className="flex flex-col items-center gap-1">
-                          <div className="bg-white p-1.5 rounded-lg border border-border-main shadow-sm">
+                          <div className="bg-white p-1 rounded-lg border border-border-main shadow-sm">
                             <img 
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://singuyencnt.github.io/On_tap_toan_THPT/')}`}
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('https://singuyencnt.github.io/On_tap_toan_THPT/')}`}
                               alt="QR Tài liệu" 
-                              className="w-16 h-16 object-contain"
+                              className="w-12 h-12 object-contain"
                             />
                           </div>
-                          <span className="text-[0.55rem] font-black text-primary uppercase tracking-tighter">TÀI LIỆU ÔN TẬP</span>
+                          <span className="text-[0.45rem] font-black text-primary uppercase tracking-tighter">TÀI LIỆU ÔN TẬP</span>
                         </div>
                         <div className="flex -space-x-3 no-print">
                           {[1, 2, 3].map(i => (
-                            <div key={i} className="w-12 h-12 rounded-full bg-white border-2 border-primary/20 flex items-center justify-center text-primary font-black shadow-sm">
+                            <div key={i} className="w-10 h-10 rounded-full bg-white border-2 border-primary/20 flex items-center justify-center text-primary font-black shadow-sm text-sm">
                               {i}
                             </div>
                           ))}
@@ -394,58 +409,58 @@ export default function RoadmapView({ user, onBack }: Props) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border-main">
-                    <div className="p-6 text-center">
-                      <Target className="w-6 h-6 text-primary mx-auto mb-2 opacity-50" />
-                      <div className="text-[0.6rem] font-bold text-text-sub uppercase tracking-widest mb-1">Mục tiêu</div>
-                      <div className="text-xl font-black text-text-main">{selectedRoadmap.targetScore}đ</div>
+                  <div className="grid grid-cols-4 divide-x divide-border-main">
+                    <div className="p-3 text-center">
+                      <Target className="w-4 h-4 text-primary mx-auto mb-1 opacity-50" />
+                      <div className="text-[0.55rem] font-bold text-text-sub uppercase tracking-widest mb-0.5">Mục tiêu</div>
+                      <div className="text-lg font-black text-text-main">{selectedRoadmap.targetScore}đ</div>
                     </div>
-                    <div className="p-6 text-center">
-                      <Clock className="w-6 h-6 text-indigo-600 mx-auto mb-2 opacity-50" />
-                      <div className="text-[0.6rem] font-bold text-text-sub uppercase tracking-widest mb-1">Thời gian/ngày</div>
-                      <div className="text-xl font-black text-text-main">{selectedRoadmap.dailyTime}p</div>
+                    <div className="p-3 text-center">
+                      <Clock className="w-4 h-4 text-indigo-600 mx-auto mb-1 opacity-50" />
+                      <div className="text-[0.55rem] font-bold text-text-sub uppercase tracking-widest mb-0.5">Thời gian</div>
+                      <div className="text-lg font-black text-text-main">{selectedRoadmap.dailyTime}p</div>
                     </div>
-                    <div className="p-6 text-center">
-                      <Calendar className="w-6 h-6 text-purple-600 mx-auto mb-2 opacity-50" />
-                      <div className="text-[0.6rem] font-bold text-text-sub uppercase tracking-widest mb-1">Thời lượng</div>
-                      <div className="text-xl font-black text-text-main">{selectedRoadmap.stage === 4 ? '4 tuần' : '8 tuần'}</div>
+                    <div className="p-3 text-center">
+                      <Calendar className="w-4 h-4 text-purple-600 mx-auto mb-1 opacity-50" />
+                      <div className="text-[0.55rem] font-bold text-text-sub uppercase tracking-widest mb-0.5">Thời lượng</div>
+                      <div className="text-lg font-black text-text-main">{selectedRoadmap.stage === 4 ? '4 tuần' : '8 tuần'}</div>
                     </div>
-                    <div className="p-6 text-center">
-                      <Sparkles className="w-6 h-6 text-orange-600 mx-auto mb-2 opacity-50" />
-                      <div className="text-[0.6rem] font-bold text-text-sub uppercase tracking-widest mb-1">Casio</div>
-                      <div className="text-xl font-black text-text-main">{selectedRoadmap.casioSkill}</div>
+                    <div className="p-3 text-center">
+                      <Sparkles className="w-4 h-4 text-orange-600 mx-auto mb-1 opacity-50" />
+                      <div className="text-[0.55rem] font-bold text-text-sub uppercase tracking-widest mb-0.5">Casio</div>
+                      <div className="text-lg font-black text-text-main">{selectedRoadmap.casioSkill}</div>
                     </div>
                   </div>
 
-                  {/* Detailed Capacity Analysis (New Section) */}
-                  <div className="p-8 border-t border-border-main bg-slate-50/30">
-                    <div className="flex items-center gap-2 mb-6">
-                      <div className="w-2 h-6 bg-primary rounded-full"></div>
-                      <h3 className="font-extrabold text-text-main uppercase tracking-tight text-lg">Phân tích năng lực đầu vào</h3>
+                  {/* Detailed Capacity Analysis - More compact */}
+                  <div className="p-4 md:p-6 border-t border-border-main bg-slate-50/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1.5 h-4 bg-primary rounded-full"></div>
+                      <h3 className="font-extrabold text-text-main uppercase tracking-tight text-sm">Phân tích năng lực</h3>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Topic Confidence Table */}
-                      <div className="space-y-3">
-                        <h4 className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.1em] mb-2 flex items-center gap-2">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-                          Mức độ tự tin (Input)
+                      <div className="space-y-2">
+                        <h4 className="text-[0.6rem] font-black text-text-sub uppercase tracking-[0.05em] flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3 h-3 text-success" />
+                          Mức độ tự tin Chuyên đề
                         </h4>
-                        <div className="bg-white border border-border-main rounded-xl overflow-hidden shadow-sm">
-                          <table className="w-full text-left text-[0.7rem]">
+                        <div className="bg-white border border-border-main rounded-lg overflow-hidden">
+                          <table className="w-full text-left text-[0.65rem]">
                             <thead>
                               <tr className="bg-slate-100 border-b border-border-main uppercase tracking-widest font-black text-text-sub">
-                                <th className="px-3 py-2">Chuyên đề</th>
-                                <th className="px-3 py-2">Tự tin</th>
+                                <th className="px-2 py-1.5">Chuyên đề</th>
+                                <th className="px-2 py-1.5">Tự tin</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-border-main text-text-sub">
                               {Object.entries(selectedRoadmap.topicConfidence || {}).length > 0 ? (
                                 Object.entries(selectedRoadmap.topicConfidence).map(([topic, level]) => (
-                                  <tr key={topic} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-3 py-2 font-bold text-text-main">{topic}</td>
-                                    <td className="px-3 py-2">
-                                      <span className={`px-1.5 py-0.5 rounded-md font-bold text-[0.55rem] uppercase tracking-tighter ${
+                                  <tr key={topic}>
+                                    <td className="px-2 py-1 font-bold text-text-main">{topic}</td>
+                                    <td className="px-2 py-1">
+                                      <span className={`px-1 py-0.5 rounded-md font-bold text-[0.5rem] uppercase tracking-tighter ${
                                         level === 'Rất tự tin' ? 'bg-green-100 text-green-700' :
                                         level === 'Tự tin' ? 'bg-blue-100 text-blue-700' :
                                         'bg-orange-100 text-orange-700'
@@ -457,7 +472,7 @@ export default function RoadmapView({ user, onBack }: Props) {
                                 ))
                               ) : (
                                 <tr>
-                                  <td colSpan={2} className="px-3 py-4 text-center text-text-sub italic">Chưa có dữ liệu.</td>
+                                  <td colSpan={2} className="px-2 py-3 text-center text-text-sub italic">Chưa có dữ liệu.</td>
                                 </tr>
                               )}
                             </tbody>
@@ -466,41 +481,41 @@ export default function RoadmapView({ user, onBack }: Props) {
                       </div>
 
                       {/* Barriers & Focus */}
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <h4 className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.1em] flex items-center gap-2">
-                            <Frown className="w-3.5 h-3.5 text-red-500" />
-                            Rào cản học tập
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <h4 className="text-[0.6rem] font-black text-text-sub uppercase tracking-[0.05em] flex items-center gap-1.5">
+                            <Frown className="w-3 h-3 text-red-500" />
+                            Rào cản gặp phải
                           </h4>
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="flex flex-wrap gap-1">
                             {selectedRoadmap.barriers && selectedRoadmap.barriers.length > 0 ? (
                               selectedRoadmap.barriers.map(barrier => (
-                                <span key={barrier} className="px-2 py-1 bg-red-50 border border-red-100 text-red-700 text-[0.65rem] font-bold rounded-lg">
+                                <span key={barrier} className="px-1.5 py-0.5 bg-red-50 border border-red-100 text-red-700 text-[0.55rem] font-bold rounded">
                                   {barrier}
                                 </span>
                               ))
                             ) : (
-                              <span className="text-text-sub text-[0.65rem] italic">Không ghi nhận.</span>
+                              <span className="text-text-sub text-[0.6rem] italic">Không ghi nhận.</span>
                             )}
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <h4 className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.1em] flex items-center gap-2">
-                            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                            Trọng tâm ưu tiên
+                        <div className="space-y-1.5">
+                          <h4 className="text-[0.6rem] font-black text-text-sub uppercase tracking-[0.05em] flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3 text-purple-600" />
+                            Trọng tâm yêu cầu
                           </h4>
-                          <div className="p-3 bg-purple-50 border border-purple-100 rounded-xl">
-                            <p className="text-purple-900 font-bold text-[0.75rem] leading-snug">
+                          <div className="p-2 bg-purple-50 border border-purple-100 rounded-lg">
+                            <p className="text-purple-900 font-bold text-[0.65rem] leading-snug">
                               {selectedRoadmap.roadmapFocus || 'Chưa xác định.'}
                             </p>
                           </div>
                         </div>
 
-                        <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl flex items-start gap-2">
-                          <Quote className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-                          <div className="text-[0.65rem] text-orange-800 font-medium leading-relaxed italic">
-                            Lời khuyên: Tập trung giải quyết dứt điểm các rào cản để bám sát lộ trình.
+                        <div className="p-2 bg-orange-50 border border-orange-100 rounded-lg flex items-start gap-1.5">
+                          <Quote className="w-3 h-3 text-orange-400 shrink-0 mt-0.5" />
+                          <div className="text-[0.55rem] text-orange-800 font-medium leading-relaxed italic">
+                            Lời khuyên: Tập trung giải quyết dứt điểm các rào cản.
                           </div>
                         </div>
                       </div>
@@ -509,52 +524,52 @@ export default function RoadmapView({ user, onBack }: Props) {
                 </div>
 
                 {/* Main Content Markdown - Optimized Spacing */}
-                <div className="grid grid-cols-1 gap-6">
-                  <div className="space-y-6">
-                    <div className="geometric-card !p-8 md:!p-10 relative overflow-hidden bg-white shadow-none border-border-main">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-4">
+                    <div className="geometric-card !p-6 md:!p-8 relative overflow-hidden bg-white shadow-none border-border-main">
                       <div className="absolute top-8 right-8 text-primary/10 select-none no-print">
                         <GraduationCap className="w-32 h-32 rotate-12" />
                       </div>
-                      <div className="markdown-body relative z-10 text-[0.85rem] leading-relaxed">
+                      <div className="markdown-body relative z-10 text-[0.8rem] leading-relaxed">
                         <Markdown>{selectedRoadmap.roadmap || ''}</Markdown>
                       </div>
                     </div>
 
                     {/* Integrated Checklist for Print and View - Compact */}
-                    <div className="geometric-card !p-6 md:!p-8 bg-slate-50/50 shadow-none border-border-main">
-                      <div className="flex items-center justify-between mb-6 border-b border-border-main pb-3">
+                    <div className="geometric-card !p-4 md:!p-6 bg-slate-50/50 shadow-none border-border-main">
+                      <div className="flex items-center justify-between mb-4 border-b border-border-main pb-2">
                         <div className="flex items-center gap-2">
-                          <ListChecks className="w-5 h-5 text-primary" />
-                          <h3 className="text-lg font-bold text-text-main uppercase tracking-tight">Nhiệm vụ & Tiến độ</h3>
+                          <ListChecks className="w-4 h-4 text-primary" />
+                          <h3 className="text-base font-bold text-text-main uppercase tracking-tight">Nhiệm vụ & Tiến độ</h3>
                         </div>
                         <div className="flex flex-col items-end">
-                          <div className="text-xl font-black text-primary">{calculateProgress()}%</div>
-                          <div className="text-[0.55rem] font-bold text-text-sub uppercase tracking-widest">Hoàn thành</div>
+                          <div className="text-lg font-black text-primary">{calculateProgress()}%</div>
+                          <div className="text-[0.5rem] font-bold text-text-sub uppercase tracking-widest">Hoàn thành</div>
                         </div>
                       </div>
 
-                      <div className="space-y-8">
+                      <div className="space-y-6">
                         {Array.from(new Set(selectedRoadmap.tasks?.map(t => t.week))).sort((a, b) => a - b).map(week => (
-                          <div key={week} className="space-y-3">
+                          <div key={week} className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <span className="w-1 h-5 bg-primary rounded-full" />
-                              <h4 className="text-[0.75rem] font-black text-text-main uppercase tracking-widest">Tuần {week}</h4>
+                              <span className="w-1 h-4 bg-primary rounded-full" />
+                              <h4 className="text-[0.7rem] font-black text-text-main uppercase tracking-widest">Tuần {week}</h4>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                               {selectedRoadmap.tasks?.filter(t => t.week === week).map(task => (
                                 <div 
                                   key={task.id}
                                   onClick={() => handleToggleTask(task.id)}
-                                  className={`p-3 rounded-lg border cursor-pointer transition-all flex items-start gap-3 bg-white ${
+                                  className={`p-2 rounded border cursor-pointer transition-all flex items-start gap-2 bg-white ${
                                     task.completed ? 'border-success/20' : 'border-border-main'
                                   }`}
                                 >
-                                  <div className={`mt-0.5 w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                                  <div className={`mt-0.5 w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-all ${
                                     task.completed ? 'bg-success border-success text-white' : 'border-border-main bg-white'
                                   }`}>
-                                    {task.completed && <CheckCircle2 className="w-3 h-3" />}
+                                    {task.completed && <CheckCircle2 className="w-2.5 h-2.5" />}
                                   </div>
-                                  <span className={`text-[0.75rem] font-medium leading-tight ${task.completed ? 'text-text-sub line-through opacity-70' : 'text-text-main'}`}>
+                                  <span className={`text-[0.7rem] font-medium leading-tight ${task.completed ? 'text-text-sub line-through opacity-70' : 'text-text-main'}`}>
                                     {task.content}
                                   </span>
                                 </div>
