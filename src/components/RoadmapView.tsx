@@ -57,12 +57,19 @@ export default function RoadmapView({ user, onBack }: Props) {
     
     setExporting(true);
     try {
+      // Temporarily expand the element to its full height for capture if needed
       const element = roadmapRef.current;
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        windowWidth: 1200, // Fixed width for consistent layout in PDF
+        onclone: (clonedDoc) => {
+          // Hide elements that shouldn't be in the PDF
+          const noPrintElements = clonedDoc.querySelectorAll('.no-print');
+          noPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
+        }
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -352,24 +359,38 @@ export default function RoadmapView({ user, onBack }: Props) {
                 {/* Summary Metadata Card */}
                 <div className="geometric-card overflow-hidden">
                   <div className="bg-primary/5 p-8 border-b border-primary/10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="bg-primary text-white text-[0.65rem] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-                          Giai đoạn {selectedRoadmap.stage}
-                        </span>
-                        <span className="text-text-sub font-bold text-xs">
-                          {new Date(selectedRoadmap.createdAt?.toDate?.() || Date.now()).toLocaleDateString('vi-VN')}
-                        </span>
-                      </div>
-                      <h2 className="text-3xl font-black text-text-main tracking-tighter uppercase">LỘ TRÌNH ÔN THI MATHCONQUER</h2>
-                      <p className="text-text-sub text-sm font-medium italic mt-1">Được thiết kế riêng cho: {user.fullName} - Lớp {user.className}</p>
-                    </div>
-                    <div className="flex -space-x-3">
-                      {[1, 2, 3].map(i => (
-                        <div key={i} className="w-12 h-12 rounded-full bg-white border-2 border-primary/20 flex items-center justify-center text-primary font-black shadow-sm">
-                          {i}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="bg-primary text-white text-[0.65rem] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                            Giai đoạn {selectedRoadmap.stage}
+                          </span>
+                          <span className="text-text-sub font-bold text-xs">
+                            {new Date(selectedRoadmap.createdAt?.toDate?.() || Date.now()).toLocaleDateString('vi-VN')}
+                          </span>
                         </div>
-                      ))}
+                        <h2 className="text-2xl md:text-3xl font-black text-text-main tracking-tighter uppercase leading-tight">LỘ TRÌNH ÔN THI MATHCONQUER</h2>
+                        <p className="text-text-sub text-sm font-medium italic mt-1">Được thiết kế riêng cho: {user.fullName} - Lớp {user.className}</p>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="bg-white p-1.5 rounded-lg border border-border-main shadow-sm">
+                            <img 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://singuyencnt.github.io/On_tap_toan_THPT/')}`}
+                              alt="QR Tài liệu" 
+                              className="w-16 h-16 object-contain"
+                            />
+                          </div>
+                          <span className="text-[0.55rem] font-black text-primary uppercase tracking-tighter">TÀI LIỆU ÔN TẬP</span>
+                        </div>
+                        <div className="flex -space-x-3 no-print">
+                          {[1, 2, 3].map(i => (
+                            <div key={i} className="w-12 h-12 rounded-full bg-white border-2 border-primary/20 flex items-center justify-center text-primary font-black shadow-sm">
+                              {i}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -403,28 +424,28 @@ export default function RoadmapView({ user, onBack }: Props) {
                       <h3 className="font-extrabold text-text-main uppercase tracking-tight text-lg">Phân tích năng lực đầu vào</h3>
                     </div>
                     
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Topic Confidence Table */}
-                      <div className="space-y-4">
-                        <h4 className="text-[0.7rem] font-black text-text-sub uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-success" />
-                          Mức độ tự tin theo chuyên đề
+                      <div className="space-y-3">
+                        <h4 className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.1em] mb-2 flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                          Mức độ tự tin (Input)
                         </h4>
                         <div className="bg-white border border-border-main rounded-xl overflow-hidden shadow-sm">
-                          <table className="w-full text-left text-xs">
+                          <table className="w-full text-left text-[0.7rem]">
                             <thead>
                               <tr className="bg-slate-100 border-b border-border-main uppercase tracking-widest font-black text-text-sub">
-                                <th className="px-4 py-3">Chuyên đề</th>
-                                <th className="px-4 py-3">Mức độ tự tin</th>
+                                <th className="px-3 py-2">Chuyên đề</th>
+                                <th className="px-3 py-2">Tự tin</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-border-main">
+                            <tbody className="divide-y divide-border-main text-text-sub">
                               {Object.entries(selectedRoadmap.topicConfidence || {}).length > 0 ? (
                                 Object.entries(selectedRoadmap.topicConfidence).map(([topic, level]) => (
                                   <tr key={topic} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-4 py-3 font-bold text-text-main">{topic}</td>
-                                    <td className="px-4 py-3">
-                                      <span className={`px-2 py-0.5 rounded-md font-bold text-[0.6rem] uppercase tracking-tighter ${
+                                    <td className="px-3 py-2 font-bold text-text-main">{topic}</td>
+                                    <td className="px-3 py-2">
+                                      <span className={`px-1.5 py-0.5 rounded-md font-bold text-[0.55rem] uppercase tracking-tighter ${
                                         level === 'Rất tự tin' ? 'bg-green-100 text-green-700' :
                                         level === 'Tự tin' ? 'bg-blue-100 text-blue-700' :
                                         'bg-orange-100 text-orange-700'
@@ -436,7 +457,7 @@ export default function RoadmapView({ user, onBack }: Props) {
                                 ))
                               ) : (
                                 <tr>
-                                  <td colSpan={2} className="px-4 py-8 text-center text-text-sub italic">Chưa có dữ liệu đánh giá chi tiết.</td>
+                                  <td colSpan={2} className="px-3 py-4 text-center text-text-sub italic">Chưa có dữ liệu.</td>
                                 </tr>
                               )}
                             </tbody>
@@ -445,41 +466,41 @@ export default function RoadmapView({ user, onBack }: Props) {
                       </div>
 
                       {/* Barriers & Focus */}
-                      <div className="space-y-6">
-                        <div className="space-y-3">
-                          <h4 className="text-[0.7rem] font-black text-text-sub uppercase tracking-[0.2em] flex items-center gap-2">
-                            <Frown className="w-4 h-4 text-red-500" />
-                            Rào cản học tập hiện tại
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <h4 className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.1em] flex items-center gap-2">
+                            <Frown className="w-3.5 h-3.5 text-red-500" />
+                            Rào cản học tập
                           </h4>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-1.5">
                             {selectedRoadmap.barriers && selectedRoadmap.barriers.length > 0 ? (
                               selectedRoadmap.barriers.map(barrier => (
-                                <span key={barrier} className="px-3 py-1.5 bg-red-50 border border-red-100 text-red-700 text-[0.7rem] font-bold rounded-lg shadow-sm">
+                                <span key={barrier} className="px-2 py-1 bg-red-50 border border-red-100 text-red-700 text-[0.65rem] font-bold rounded-lg">
                                   {barrier}
                                 </span>
                               ))
                             ) : (
-                              <span className="text-text-sub text-xs italic">Không có rào cản đặc biệt nào được ghi nhận.</span>
+                              <span className="text-text-sub text-[0.65rem] italic">Không ghi nhận.</span>
                             )}
                           </div>
                         </div>
 
-                        <div className="space-y-3">
-                          <h4 className="text-[0.7rem] font-black text-text-sub uppercase tracking-[0.2em] flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-purple-600" />
-                            Ưu tiên trọng tâm giai đoạn này
+                        <div className="space-y-2">
+                          <h4 className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.1em] flex items-center gap-2">
+                            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                            Trọng tâm ưu tiên
                           </h4>
-                          <div className="p-4 bg-purple-50 border border-purple-100 rounded-xl">
-                            <p className="text-purple-900 font-bold text-sm leading-relaxed">
-                              {selectedRoadmap.roadmapFocus || 'Chưa xác định trọng tâm ưu tiên.'}
+                          <div className="p-3 bg-purple-50 border border-purple-100 rounded-xl">
+                            <p className="text-purple-900 font-bold text-[0.75rem] leading-snug">
+                              {selectedRoadmap.roadmapFocus || 'Chưa xác định.'}
                             </p>
                           </div>
                         </div>
 
-                        <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-start gap-3">
-                          <Quote className="w-5 h-5 text-orange-400 shrink-0 mt-1" />
-                          <div className="text-[0.7rem] text-orange-800 font-medium leading-relaxed italic">
-                            Lời khuyên từ MATHCONQUER: Tập trung giải quyết các chuyên đề có mức tự tin "Chưa tự tin" nhưng có sự xuất hiện nhiều trong đề tốt nghiệp.
+                        <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl flex items-start gap-2">
+                          <Quote className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+                          <div className="text-[0.65rem] text-orange-800 font-medium leading-relaxed italic">
+                            Lời khuyên: Tập trung giải quyết dứt điểm các rào cản để bám sát lộ trình.
                           </div>
                         </div>
                       </div>
@@ -487,53 +508,53 @@ export default function RoadmapView({ user, onBack }: Props) {
                   </div>
                 </div>
 
-                {/* Main Content Markdown */}
-                <div className="grid grid-cols-1 gap-8">
-                  <div className="space-y-8">
-                    <div className="geometric-card !p-10 md:!p-16 relative overflow-hidden">
+                {/* Main Content Markdown - Optimized Spacing */}
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="space-y-6">
+                    <div className="geometric-card !p-8 md:!p-10 relative overflow-hidden bg-white shadow-none border-border-main">
                       <div className="absolute top-8 right-8 text-primary/10 select-none no-print">
                         <GraduationCap className="w-32 h-32 rotate-12" />
                       </div>
-                      <div className="markdown-body relative z-10">
+                      <div className="markdown-body relative z-10 text-[0.85rem] leading-relaxed">
                         <Markdown>{selectedRoadmap.roadmap || ''}</Markdown>
                       </div>
                     </div>
 
-                    {/* Integrated Checklist for Print and View */}
-                    <div className="geometric-card !p-8 md:!p-12 bg-slate-50/50">
-                      <div className="flex items-center justify-between mb-8 border-b border-border-main pb-4">
-                        <div className="flex items-center gap-3">
-                          <ListChecks className="w-6 h-6 text-primary" />
-                          <h3 className="text-xl font-bold text-text-main uppercase tracking-tight">Danh sách nhiệm vụ & Tiến độ</h3>
+                    {/* Integrated Checklist for Print and View - Compact */}
+                    <div className="geometric-card !p-6 md:!p-8 bg-slate-50/50 shadow-none border-border-main">
+                      <div className="flex items-center justify-between mb-6 border-b border-border-main pb-3">
+                        <div className="flex items-center gap-2">
+                          <ListChecks className="w-5 h-5 text-primary" />
+                          <h3 className="text-lg font-bold text-text-main uppercase tracking-tight">Nhiệm vụ & Tiến độ</h3>
                         </div>
                         <div className="flex flex-col items-end">
-                          <div className="text-2xl font-black text-primary">{calculateProgress()}%</div>
-                          <div className="text-[0.6rem] font-bold text-text-sub uppercase tracking-widest">Hoàn thành</div>
+                          <div className="text-xl font-black text-primary">{calculateProgress()}%</div>
+                          <div className="text-[0.55rem] font-bold text-text-sub uppercase tracking-widest">Hoàn thành</div>
                         </div>
                       </div>
 
-                      <div className="space-y-10">
+                      <div className="space-y-8">
                         {Array.from(new Set(selectedRoadmap.tasks?.map(t => t.week))).sort((a, b) => a - b).map(week => (
-                          <div key={week} className="space-y-4">
-                            <div className="flex items-center gap-3">
-                              <span className="w-1.5 h-6 bg-primary rounded-full" />
-                              <h4 className="text-sm font-black text-text-main uppercase tracking-widest">Nhiệm vụ Tuần {week}</h4>
+                          <div key={week} className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className="w-1 h-5 bg-primary rounded-full" />
+                              <h4 className="text-[0.75rem] font-black text-text-main uppercase tracking-widest">Tuần {week}</h4>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                               {selectedRoadmap.tasks?.filter(t => t.week === week).map(task => (
                                 <div 
                                   key={task.id}
                                   onClick={() => handleToggleTask(task.id)}
-                                  className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3 bg-white ${
-                                    task.completed ? 'border-success/30 shadow-sm' : 'border-border-main hover:border-primary/50 shadow-sm'
+                                  className={`p-3 rounded-lg border cursor-pointer transition-all flex items-start gap-3 bg-white ${
+                                    task.completed ? 'border-success/20' : 'border-border-main'
                                   }`}
                                 >
-                                  <div className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                                  <div className={`mt-0.5 w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
                                     task.completed ? 'bg-success border-success text-white' : 'border-border-main bg-white'
                                   }`}>
-                                    {task.completed && <CheckCircle2 className="w-3.5 h-3.5" />}
+                                    {task.completed && <CheckCircle2 className="w-3 h-3" />}
                                   </div>
-                                  <span className={`text-[0.8rem] font-medium leading-snug ${task.completed ? 'text-text-sub line-through opacity-70' : 'text-text-main'}`}>
+                                  <span className={`text-[0.75rem] font-medium leading-tight ${task.completed ? 'text-text-sub line-through opacity-70' : 'text-text-main'}`}>
                                     {task.content}
                                   </span>
                                 </div>
@@ -544,30 +565,7 @@ export default function RoadmapView({ user, onBack }: Props) {
                       </div>
                     </div>
 
-                    {/* QR Code and Materials Link for Printing */}
-                    <div className="border-2 border-dashed border-primary/20 rounded-2xl p-8 bg-slate-50/30 flex flex-col items-center text-center gap-4">
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-black text-text-main uppercase tracking-widest">KHO TÀI LIỆU ÔN TẬP CHÍNH THỐNG</h4>
-                        <p className="text-xs text-text-sub font-medium">Quét mã QR bên dưới để truy cập bộ tài liệu ôn tập Toán 12 công phu của Giáo viên</p>
-                      </div>
-                      
-                      <div className="bg-white p-3 rounded-2xl shadow-sm border border-border-main">
-                        <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://singuyencnt.github.io/On_tap_toan_THPT/')}`}
-                          alt="QR Code Tài liệu" 
-                          className="w-32 h-32 object-contain"
-                        />
-                      </div>
-                      
-                      <a 
-                        href="https://singuyencnt.github.io/On_tap_toan_THPT/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary font-bold text-xs underline hover:text-blue-700 transition-colors break-all"
-                      >
-                        https://singuyencnt.github.io/On_tap_toan_THPT/
-                      </a>
-                    </div>
+                    {/* QR Code and Materials Link for Printing removed from footer and moved to header */}
                   </div>
                 </div>
 
