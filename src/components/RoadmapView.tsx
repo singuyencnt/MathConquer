@@ -59,27 +59,19 @@ export default function RoadmapView({ user, onBack }: Props) {
     try {
       const element = roadmapRef.current;
       
-      // Capture with higher quality and specific window width for best fit
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 1.5, // Better balance for memory
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        windowWidth: 1200, 
-        scrollY: 0, // CRITICAL: Ensure capture starts from top of element
+        windowWidth: 1000,
+        scrollY: -window.scrollY,
         onclone: (clonedDoc) => {
-          const el = clonedDoc.querySelector('[ref="roadmapRef"]') || clonedDoc.body; // fallback
-          // Hide elements that shouldn't be in the PDF
-          const noPrintElements = clonedDoc.querySelectorAll('.no-print');
-          noPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
-          
-          // Ensure the element is fully expanded and no extra margins
-          const target = clonedDoc.body.firstChild as HTMLElement;
-          if (target) {
-            target.style.height = 'auto';
-            target.style.overflow = 'visible';
-            target.style.margin = '0';
-            target.style.padding = '0';
+          const clonedEl = clonedDoc.querySelector('.roadmap-container-print') as HTMLElement;
+          if (clonedEl) {
+            clonedEl.style.height = 'auto';
+            clonedEl.style.overflow = 'visible';
+            clonedEl.style.padding = '10mm';
           }
         }
       });
@@ -95,22 +87,23 @@ export default function RoadmapView({ user, onBack }: Props) {
       let heightLeft = imgHeight;
       let position = 0;
 
-      // Add first page
       pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
 
-      // Add remaining pages if any
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
         heightLeft -= pdfHeight;
       }
-
+      
       pdf.save(`Lo-Trinh-Toan-12-GD${selectedRoadmap.stage}-${user.fullName}.pdf`);
     } catch (error) {
       console.error("PDF Export failed:", error);
-      alert("Xuất PDF thất bại. Bạn có thể sử dụng chức năng In của trình duyệt.");
+      const userChoice = confirm("Xuất PDF gặp sự cố kỹ thuật (thường do nội dung quá dài). Bạn có muốn sử dụng chức năng In của trình duyệt (chọn 'Lưu dưới dạng PDF') để thay thế không?");
+      if (userChoice) {
+        window.print();
+      }
     } finally {
       setExporting(false);
     }
@@ -370,7 +363,7 @@ export default function RoadmapView({ user, onBack }: Props) {
               </div>
 
               {/* PDF Content Root */}
-              <div ref={roadmapRef} className="space-y-4 bg-white p-2">
+              <div ref={roadmapRef} className="space-y-4 bg-white p-2 roadmap-container-print">
                 {/* Summary Metadata Card */}
                 <div className="geometric-card overflow-hidden !shadow-none border-border-main">
                   <div className="bg-primary/5 p-4 md:p-6 border-b border-primary/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
