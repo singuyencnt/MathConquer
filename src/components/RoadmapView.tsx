@@ -382,14 +382,14 @@ export default function RoadmapView({ user, onBack }: Props) {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex flex-col items-center gap-1">
-                          <div className="bg-white p-1 rounded-lg border border-border-main shadow-sm">
+                          <div className="bg-white p-1.5 rounded-lg border border-border-main shadow-sm">
                             <img 
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent('https://singuyencnt.github.io/On_tap_toan_THPT/')}`}
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://singuyencnt.github.io/On_tap_toan_THPT/')}`}
                               alt="QR Tài liệu" 
-                              className="w-12 h-12 object-contain"
+                              className="w-20 h-20 object-contain"
                             />
                           </div>
-                          <span className="text-[0.45rem] font-black text-primary uppercase tracking-tighter">TÀI LIỆU ÔN TẬP</span>
+                          <span className="text-[0.5rem] font-black text-primary uppercase tracking-tighter">TÀI LIỆU ÔN TẬP</span>
                         </div>
                         <div className="flex -space-x-3 no-print">
                           {[1, 2, 3].map(i => (
