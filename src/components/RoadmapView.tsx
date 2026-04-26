@@ -297,9 +297,14 @@ export default function RoadmapView({ user, onBack }: Props) {
           <div className="absolute top-0 right-0 w-20 h-20 bg-primary/20 rounded-full blur-2xl -mr-10 -mt-10" />
           <p className="text-[0.65rem] font-bold uppercase tracking-widest opacity-50 mb-3">Tài liệu đính kèm</p>
           <p className="font-bold text-sm mb-6 leading-tight">Đừng quên kết hợp lộ trình này với Tài liệu của Giáo viên biên soạn.</p>
-          <button className="bg-white/10 hover:bg-white/20 text-white w-full py-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wide">
+          <a 
+            href="https://singuyencnt.github.io/On_tap_toan_THPT/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white/10 hover:bg-white/20 text-white w-full py-2.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wide inline-block"
+          >
             Xem tài liệu
-          </button>
+          </a>
         </div>
       </aside>
 
@@ -539,7 +544,30 @@ export default function RoadmapView({ user, onBack }: Props) {
                       </div>
                     </div>
 
-                    {/* Learning Logs Section - Only logic remains above, we display a list here or keep logs outside? Use discretion */}
+                    {/* QR Code and Materials Link for Printing */}
+                    <div className="border-2 border-dashed border-primary/20 rounded-2xl p-8 bg-slate-50/30 flex flex-col items-center text-center gap-4">
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-black text-text-main uppercase tracking-widest">KHO TÀI LIỆU ÔN TẬP CHÍNH THỐNG</h4>
+                        <p className="text-xs text-text-sub font-medium">Quét mã QR bên dưới để truy cập bộ tài liệu ôn tập Toán 12 công phu của Giáo viên</p>
+                      </div>
+                      
+                      <div className="bg-white p-3 rounded-2xl shadow-sm border border-border-main">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent('https://singuyencnt.github.io/On_tap_toan_THPT/')}`}
+                          alt="QR Code Tài liệu" 
+                          className="w-32 h-32 object-contain"
+                        />
+                      </div>
+                      
+                      <a 
+                        href="https://singuyencnt.github.io/On_tap_toan_THPT/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary font-bold text-xs underline hover:text-blue-700 transition-colors break-all"
+                      >
+                        https://singuyencnt.github.io/On_tap_toan_THPT/
+                      </a>
+                    </div>
                   </div>
                 </div>
 
