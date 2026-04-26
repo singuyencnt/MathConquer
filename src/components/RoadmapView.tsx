@@ -294,7 +294,7 @@ export default function RoadmapView({ user, onBack }: Props) {
             ))}
           </div>
 
-          {user.email === 'minhkhoiklk@gmail.com' && (
+          {user.email === 'singuyen.cnt@gmail.com' && (
             <div className="pt-6 mt-6 border-t border-border-main">
               <button
                 onClick={handleClearAllGlobalHistory}

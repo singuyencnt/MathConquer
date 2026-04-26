@@ -66,7 +66,7 @@ export default function App() {
         if (userDoc.exists()) {
           const userData = userDoc.data() as UserProfile;
           // Ensure correct role if it's the default admin email
-          if (firebaseUser.email === 'minhkhoiklk@gmail.com' && userData.role !== 'teacher') {
+          if (firebaseUser.email === 'singuyen.cnt@gmail.com' && userData.role !== 'teacher') {
             const updatedUser = { ...userData, role: 'teacher' as const };
             await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
             setUser(updatedUser);
@@ -76,7 +76,7 @@ export default function App() {
         } else {
           // New user registration
           const isGuestAdmin = firebaseUser.isAnonymous;
-          const isDefaultAdmin = firebaseUser.email === 'minhkhoiklk@gmail.com';
+          const isDefaultAdmin = firebaseUser.email === 'singuyen.cnt@gmail.com';
           
           const newUser: UserProfile = {
             uid: firebaseUser.uid,

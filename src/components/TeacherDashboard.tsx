@@ -534,7 +534,7 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
                 <p className="text-sm text-text-sub">Theo dõi lộ trình ôn tập của các em học sinh lớp 12.</p>
               </div>
               <div className="flex items-center gap-3 self-start">
-                {user.email === 'minhkhoiklk@gmail.com' && (
+                {user.email === 'singuyen.cnt@gmail.com' && (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleSeedDemoData}
@@ -608,7 +608,7 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
                       <span className="px-2.5 py-1 bg-bg-main text-text-sub text-[0.65rem] font-bold rounded-md border border-border-main uppercase tracking-wider">
                         Lớp {student.className || 'N/A'}
                       </span>
-                      {user.email === 'minhkhoiklk@gmail.com' && (
+                      {user.email === 'singuyen.cnt@gmail.com' && (
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
