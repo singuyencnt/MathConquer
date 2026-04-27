@@ -165,15 +165,51 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   };
 
   const handleSeedDemoData = async () => {
-    if (students.length === 0) {
-      alert("Không có học sinh nào để chuẩn hóa dữ liệu.");
-      return;
-    }
-
-    if (!confirm(`Hệ thống sẽ chuẩn hóa lộ trình cho ${students.length} học sinh (Giai đoạn 1, 2, 3) để làm đẹp dữ liệu báo cáo. Quá trình này có thể mất vài giây. Bạn có chắc chắn?`)) return;
+    if (!confirm(`Hệ thống sẽ chuẩn hóa lộ trình cho tất cả học sinh (bao gồm danh sách 38 học sinh mới) để làm đẹp dữ liệu báo cáo. Quá trình này có thể mất vài giây. Bạn có chắc chắn?`)) return;
     
     setSeeding(true);
     try {
+      const LIST_38_STUDENTS = [
+        { email: 'nongtam427@gmail.com', name: 'NÔNG THỊ MỸ TÂM', class: '12B' },
+        { email: 'hoaiduc9908@gmail.com', name: 'CAO HOÀI ĐỨC', class: '12B' },
+        { email: 'trieuthanh1688@gmail.com', name: 'TRIỆU QUANG THÀNH', class: '12B' },
+        { email: 'quyendangthido@gmail.com', name: 'ĐẶNG THỊ ĐỖ QUYÊN', class: '12B' },
+        { email: 'tduy098zzz@gmail.com', name: 'QUÁCH THÀNH DUY', class: '12B' },
+        { email: 'Nathy2005a@gmail.com', name: 'PHẠM THỊ HOÀI THƯƠNG', class: '12B' },
+        { email: 'nguyenrubi79@gmail.com', name: 'TRIỆU CAO NGUYÊN', class: '12B' },
+        { email: 'tgieenphan@gmail.com', name: 'HUỲNH MINH THƯ', class: '12B' },
+        { email: 'vttt15483385@gmail.com', name: 'VÕ THỊ THU THẢO', class: '12B' },
+        { email: 'phat6928@gmail.com', name: 'NGUYỄN XUÂN PHÁT', class: '12B' },
+        { email: 'vyt00603@gmail.com', name: 'ĐINH THỊ THẢO VY', class: '12B' },
+        { email: 'thuydung472008@gmail.com', name: 'PHẠM LÊ THÙY DUNG', class: '12B' },
+        { email: 'Hangluongiuuy@gmail.com', name: 'LƯƠNG THÚY HẰNG', class: '12B' },
+        { email: 'trantrinhdatne@gmail.com', name: 'TRẦN THỊ PHƯƠNG TRÌNH', class: '12B' },
+        { email: 'ha6291851@gmail.com', name: 'ĐINH ĐẠI DƯƠNG', class: '12D' },
+        { email: 'emloengejbt@gmail.com', name: 'ĐINH LUÂN', class: '12D' },
+        { email: 'hoangthihaukb@gmail.com', name: 'HOÀNG THỊ HẬU', class: '12D' },
+        { email: 'n4732728@gmail.com', name: 'ĐINH THỊ NGUYỆT', class: '12D' },
+        { email: 'duyd89832@gmail.com', name: 'ĐINH VĂN DUY', class: '12D' },
+        { email: 'dinhthiach64@gmail.com', name: 'ĐINH THỊ MỸ UYÊN', class: '12D' },
+        { email: 'daothuong568568@gmail.com', name: 'ĐÀO DUY HOÀI THƯƠNG', class: '12D' },
+        { email: 'nhudinhthiai@gmail.com', name: 'ĐINH THỊ ÁI NHƯ', class: '12D' },
+        { email: 'calinhdt701@gmail.com', name: 'ĐINH VĂN BẮC', class: '12D' },
+        { email: 'lachd586@gmail.com', name: 'ĐINH THỊ NHƯ QUỲNH', class: '12D' },
+        { email: 'dinhthihangak@gmail.com', name: 'ĐINH THỊ HẰNG', class: '12D' },
+        { email: 'ban08052025@gmail.com', name: 'ĐINH THỊ BANG', class: '12D' },
+        { email: 'dinhnguyen182838@gmail.com', name: 'ĐINH VĂN NGUYÊN', class: '12D' },
+        { email: 'vietdinh.06052008@gmail.com', name: 'ĐINH VĂN VIỆT', class: '12D' },
+        { email: 'thianh617@gmail.com', name: 'ĐINH THỊ ANH', class: '12D' },
+        { email: 'thanhhphucc112008@gmail.com', name: 'ĐÀO HOÀNG THANH PHÚC', class: '12D' },
+        { email: 'tkim44867@gmail.com', name: 'ĐINH THỊ KIM', class: '12D' },
+        { email: 'khoidinhvan4@gmail.com', name: 'ĐINH VĂN KHÔI', class: '12D' },
+        { email: 'myd530385@gmail.com', name: 'ĐINH THỊ TRÀ MY', class: '12D' },
+        { email: 'khachkb000999@gmail.com', name: 'ĐINH THỊ CỨU', class: '12D' },
+        { email: 'tramdinh.27082008@gmail.com', name: 'ĐINH THỊ TRÂM', class: '12D' },
+        { email: 'dinhthit322@gmail.com', name: 'ĐINH THỊ THÚY', class: '12D' },
+        { email: 'changdinhthi30@gmail.com', name: 'ĐINH THỊ CHÀNG', class: '12D' },
+        { email: 'dinhvung25052007@icloud.com', name: 'ĐINH VĂN VUNG', class: '12D' }
+      ];
+
       const TOPICS = [
         "Ứng dụng đạo hàm để khảo sát hàm số",
         "Hàm số lũy thừa, mũ và logarit",
@@ -243,24 +279,22 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         "Hôm nay em làm sai 3 câu nhưng đã hiểu rõ nguyên nhân, không tiếc nuối.",
         "Mục tiêu 9 điểm môn Toán đang gần hơn bao giờ hết, cố lên tôi ơi!",
         "Em thích nhất là phần tài liệu tóm tắt trong ứng dụng, rất cô đọng.",
-        "Hôm nay em tập trung làm các bài toán thực tế, thấy Toán học thật gần gũi.",
+        "Hôm nay em học tập trung làm các bài toán thực tế, thấy Toán học thật gần gũi.",
         "Em vừa chinh phục được một dạng bài vận dụng cao mà trước đây em bỏ qua.",
         "Sáng nay em dậy sớm 1 tiếng để ôn tập công thức, thấy hiệu quả bất ngờ.",
         "Càng học em càng thấy Toán 12 có nhiều điều thú vị để khám phá."
       ];
 
-      const generateRichRoadmap = (stage: number, student: UserProfile, assessment: Partial<AssessmentData>) => {
+      const generateRichRoadmap = (stage: number, student: { fullName: string }, assessment: Partial<AssessmentData>) => {
         const duration = assessment.durationWeeks || 4;
         const topics = STAGE_TOPICS[stage as 1|2|3].map(idx => TOPICS[idx]);
         const score = assessment.scores?.endHK1 || assessment.scores?.midHK1 || 5.0;
         const target = assessment.targetScore || 8.0;
         const dailyTime = assessment.dailyTime || 60;
-        const mainBarrier = assessment.barriers?.[0] || "lo lắng về phần Hình học và Lượng giác";
 
         let content = `Chào **${student.fullName}** nhé! Cô giáo rất ấn tượng với điểm số ${score.toFixed(1)} hiện tại của em. Với mục tiêu duy trì và chắc chắn đạt điểm ${target}+ trong kỳ thi sắp tới, cô đã thiết kế lộ trình ${duration} tuần tập trung vào việc khắc phục các lỗ hổng lý thuyết và giúp em hệ thống lại kiến thức một cách bản chất nhất. Chúng ta sẽ dành ${dailyTime} phút mỗi ngày để cùng nhau tiến bộ nhé!\n\n`;
 
         for (let w = 1; w <= duration; w++) {
-          // Xoay vòng các chủ đề nếu số tuần nhiều hơn số chủ đề
           const topic = topics[(w - 1) % topics.length];
           content += `### TUẦN ${w}: ${topic.toUpperCase()}\n`;
           
@@ -293,7 +327,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
 - **Để bớt quên công thức:** Dùng Flashcard hoặc Mindmap. Mỗi khi học xong một dạng, hãy tự vẽ lại sơ đồ các bước giải.
 - **Mỗi ngày ${dailyTime} phút:** Hãy tắt thông báo điện thoại, tập trung hoàn toàn. Chất lượng hơn số lượng em nhé!
 
-Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ trình này, mục tiêu ${target}+ hoàn toàn nằm trong tầm tay em. Cố gắng lên nhé!`;
+Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ trình này, mục tiêu ${target}+ hoàn hoàn nằm trong tầm tay em. Cố gắng lên nhé!`;
 
         return content;
       };
@@ -320,7 +354,28 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
       const batch = writeBatch(db);
       let count = 0;
 
-      for (const student of students) {
+      // 1. Identify all students to process (Existing + List 38)
+      const existingEmails = new Set(students.map(s => s.email.toLowerCase()));
+      const studentsToSeed = [...students];
+
+      for (const demoS of LIST_38_STUDENTS) {
+        if (!existingEmails.has(demoS.email.toLowerCase())) {
+          const newUid = `demo-uid-${demoS.email.replace(/[@.]/g, '-')}`;
+          const newUser: UserProfile = {
+            uid: newUid,
+            email: demoS.email,
+            fullName: demoS.name,
+            className: demoS.class,
+            role: 'student',
+            createdAt: new Date() // Will be updated below
+          };
+          // Use setDoc via batch
+          batch.set(doc(db, 'users', newUid), newUser);
+          studentsToSeed.push(newUser);
+        }
+      }
+
+      for (const student of studentsToSeed) {
         const studentId = student.uid;
         if (!studentId) continue;
 
@@ -334,10 +389,10 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
         for (let stageNum = 1; stageNum <= 3; stageNum++) {
           let stageAs = studentAs.find(a => a.stage === stageNum);
           
-          const stageDate = new Date();
-          if (stageNum === 1) stageDate.setMonth(stageDate.getMonth() - 5);
-          if (stageNum === 2) stageDate.setMonth(stageDate.getMonth() - 3);
-          if (stageNum === 3) stageDate.setMonth(stageDate.getMonth() - 1);
+          const stageDate = new Date(joinDate);
+          if (stageNum === 1) stageDate.setDate(stageDate.getDate() + 1);
+          if (stageNum === 2) stageDate.setDate(stageDate.getDate() + 15);
+          if (stageNum === 3) stageDate.setDate(stageDate.getDate() + 30);
           
           const randomWeeks = [4, 6, 8][Math.floor(Math.random() * 3)];
           const tasks = [];
@@ -356,7 +411,7 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
           
           for (let l = 0; l < logCount; l++) {
             const logDate = new Date(stageDate);
-            logDate.setDate(logDate.getDate() + (l * 5) + 2);
+            logDate.setDate(logDate.getDate() + (l * 3) + 1);
             
             const logFeeling = FEELINGS[Math.floor(Math.random() * FEELINGS.length)];
             const hasResponse = Math.random() > 0.4;
@@ -370,7 +425,7 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
 
             if (hasResponse) {
               const resDate = new Date(logDate);
-              resDate.setDate(resDate.getDate() + 1);
+              resDate.setHours(resDate.getHours() + 4 + Math.floor(Math.random() * 20));
               log.teacherResponse = TEACHER_RESPONSES[Math.floor(Math.random() * TEACHER_RESPONSES.length)];
               log.teacherResponseDate = resDate;
             }
@@ -378,71 +433,41 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
           }
 
           if (stageAs) {
-            const roadmapText = stageAs.roadmap || '';
-            const isError = roadmapText.includes('error') || 
-                          roadmapText.includes('Quota') || 
-                          roadmapText.includes('Lộ trình cá nhân hóa Giai đoạn') ||
-                          roadmapText.includes('Lộ trình bứt phá Giai đoạn') ||
-                          roadmapText.includes('dựa trên mục tiêu điểm số và năng lực hiện tại') ||
-                          roadmapText.includes('TUẦN 1-2: TĂNG TỐC') || // Nhận diện format cũ (lộ trình ảo 2)
-                          roadmapText.includes('LỜI KHUYÊN VƯỢT QUA RÀO CẢN'); // Nhận diện format cũ
+            const updateRef = doc(db, 'assessments', stageAs.id!);
+            const cleanTargetScore = Math.round((stageAs.targetScore || 8.0) * 2) / 2;
+            const cleanDailyTime = (stageAs.dailyTime && stageAs.dailyTime >= 45) ? stageAs.dailyTime : (60 + Math.floor(Math.random() * 60));
+            const cleanDuration = stageAs.durationWeeks || randomWeeks;
             
-            const isMessyData = (stageAs.dailyTime && stageAs.dailyTime < 30) || 
-                                (String(stageAs.targetScore).length > 4) ||
-                                (!stageAs.durationWeeks);
+            const dummyConfidence: Record<string, string> = {};
+            const currentStageTopics = STAGE_TOPICS[stageNum as 1|2|3] || STAGE_TOPICS[1];
+            currentStageTopics.forEach(idx => {
+              dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
+            });
+            const dummyBarriers = [...BARRIER_OPTIONS].sort(() => Math.random() - 0.5).slice(0, 2);
+            const dummyFocus = ROADMAP_FOCUS_OPTIONS[Math.floor(Math.random() * ROADMAP_FOCUS_OPTIONS.length)];
 
-            const isMissingSpecifics = !stageAs.topicConfidence || 
-                                     Object.keys(stageAs.topicConfidence).length === 0 || 
-                                     !stageAs.barriers || 
-                                     stageAs.barriers.length === 0 || 
-                                     !stageAs.roadmapFocus;
-
-            // Updated condition: Always update if requested through "Beautify"
-            const needsUpdate = isError || isMessyData || isMissingSpecifics;
-
-            if (needsUpdate) {
-              const updateRef = doc(db, 'assessments', stageAs.id!);
-              const cleanTargetScore = Math.round((stageAs.targetScore || 8.0) * 2) / 2;
-              const cleanDailyTime = (stageAs.dailyTime && stageAs.dailyTime >= 45) ? stageAs.dailyTime : (60 + Math.floor(Math.random() * 60));
-              const cleanDuration = stageAs.durationWeeks || randomWeeks;
-              
-              // New dummy data for missing fields
-              const dummyConfidence: Record<string, string> = {};
-              const currentStageTopics = STAGE_TOPICS[stageNum as 1|2|3|4] || STAGE_TOPICS[1];
-              currentStageTopics.forEach(idx => {
-                dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
-              });
-              const dummyBarriers = [...BARRIER_OPTIONS].sort(() => Math.random() - 0.5).slice(0, 2);
-              const dummyFocus = ROADMAP_FOCUS_OPTIONS[Math.floor(Math.random() * ROADMAP_FOCUS_OPTIONS.length)];
-
-              const updatedData: Partial<AssessmentData> = {
-                targetScore: cleanTargetScore,
+            const updatedData: Partial<AssessmentData> = {
+              targetScore: cleanTargetScore,
+              dailyTime: cleanDailyTime,
+              tasks: tasks,
+              learningLogs: logs,
+              topicConfidence: (stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0) ? stageAs.topicConfidence : dummyConfidence,
+              barriers: (stageAs.barriers && stageAs.barriers.length > 0) ? stageAs.barriers : dummyBarriers,
+              roadmapFocus: stageAs.roadmapFocus || dummyFocus,
+              roadmap: generateRichRoadmap(stageNum, student, { 
+                targetScore: cleanTargetScore, 
                 dailyTime: cleanDailyTime,
-                tasks: tasks,
-                learningLogs: logs,
-                topicConfidence: (stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0) ? stageAs.topicConfidence : dummyConfidence,
+                durationWeeks: cleanDuration,
                 barriers: (stageAs.barriers && stageAs.barriers.length > 0) ? stageAs.barriers : dummyBarriers,
                 roadmapFocus: stageAs.roadmapFocus || dummyFocus,
-                roadmap: generateRichRoadmap(stageNum, student, { 
-                  ...stageAs, 
-                  targetScore: cleanTargetScore, 
-                  dailyTime: cleanDailyTime,
-                  durationWeeks: cleanDuration,
-                  barriers: (stageAs.barriers && stageAs.barriers.length > 0) ? stageAs.barriers : dummyBarriers,
-                  roadmapFocus: stageAs.roadmapFocus || dummyFocus,
-                  topicConfidence: (stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0) ? stageAs.topicConfidence : dummyConfidence,
-                }),
-                durationWeeks: cleanDuration
-              };
-              
-              batch.update(updateRef, updatedData);
-            }
+                topicConfidence: (stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0) ? stageAs.topicConfidence : dummyConfidence,
+              }),
+              durationWeeks: cleanDuration
+            };
+            
+            batch.update(updateRef, updatedData);
           } else {
             const newDocRef = doc(collection(db, 'assessments'));
-            const midScore = Math.round((5 + Math.random() * 3) * 10) / 10;
-            const endScore = Math.round((midScore + (Math.random() * 1.5)) * 10) / 10;
-            const targetScore = Math.min(10, Math.round((endScore + 1.2) * 2) / 2);
-            
             const dummyConfidence: Record<string, string> = {};
             STAGE_TOPICS[stageNum as 1|2|3].forEach(idx => {
               dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
@@ -479,9 +504,8 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
       }
 
       await batch.commit();
-      alert(`Thành công! Đã chuẩn hóa và tạo mới ${count} lộ trình cho ${students.length} học sinh.`);
+      alert(`Thành công! Đã chuẩn hóa và tạo mới ${count} lộ trình cho ${studentsToSeed.length} học sinh.`);
       
-      // Re-fetch everything to ensure UI is in sync
       const querySnapshot = await getDocs(query(collection(db, 'users'), where('role', '==', 'student')));
       setStudents(querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile)));
       
