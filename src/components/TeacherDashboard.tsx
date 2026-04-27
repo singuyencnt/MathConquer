@@ -11,6 +11,81 @@ interface Props {
   onBack: () => void;
 }
 
+const TOPICS_BY_STAGE: Record<number, string[]> = {
+  1: [
+    "Hình học không gian (Lớp 11)",
+    "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Lượng giác (Lớp 11)",
+    "Lý thuyết đồ thị (Lớp 11)",
+    "Phương trình, bất phương trình (Lớp 11)",
+    "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Vectơ trong không gian (Lớp 12)"
+  ],
+  2: [
+    "Hình học không gian (Lớp 11)",
+    "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Lượng giác (Lớp 11)",
+    "Lý thuyết đồ thị (Lớp 11)",
+    "Phương trình, bất phương trình (Lớp 11)",
+    "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Vectơ trong không gian (Lớp 12)",
+    "Thống kê (Lớp 12)"
+  ],
+  3: [
+    "Hình học không gian (Lớp 11)",
+    "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Lượng giác (Lớp 11)",
+    "Lý thuyết đồ thị (Lớp 11)",
+    "Phương trình, bất phương trình (Lớp 11)",
+    "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Vectơ trong không gian (Lớp 12)",
+    "Thống kê (Lớp 12)",
+    "Xác suất (Lớp 10,11,12)"
+  ],
+  4: [
+    "Hình học không gian (Lớp 11)",
+    "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Lượng giác (Lớp 11)",
+    "Lý thuyết đồ thị (Lớp 11)",
+    "Phương trình, bất phương trình (Lớp 11)",
+    "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Vectơ trong không gian (Lớp 12)",
+    "Thống kê (Lớp 12)",
+    "Nguyên hàm, tích phân, ứng dụng (Lớp 12)",
+    "Phương pháp tọa độ trong không gian (Lớp 12)",
+    "Xác suất (Lớp 10,11,12)"
+  ]
+};
+
+const normalizeConfidenceAction = (topic: string, confidence: any) => {
+  let level = String(confidence || "Chưa đánh giá");
+  if (level === 'Tự tin') return 'Bình thường (5-7đ)';
+  if (level === 'Chưa tự tin') return 'Rất yếu / Mất gốc';
+  if (level === 'Rất tự tin' && !level.includes('8-10đ')) return 'Rất tự tin (8-10đ)';
+  return level;
+};
+
+const getNormalizedTopicValue = (topic: string, confidenceData: Record<string, any>) => {
+  if (confidenceData[topic]) return normalizeConfidenceAction(topic, confidenceData[topic]);
+  
+  // Mapping for legacy topic names to keep some data
+  const legacyMap: Record<string, string> = {
+    "Dãy số và cấp số (Lớp 11)": "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Nguyên hàm và tích phân": "Nguyên hàm, tích phân, ứng dụng (Lớp 12)",
+    "Phương pháp tọa độ trong không gian": "Phương pháp tọa độ trong không gian (Lớp 12)",
+    "Giới hạn và đạo hàm (Lớp 11)": "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Tổ hợp và xác suất (Lớp 11)": "Xác suất (Lớp 10,11,12)"
+  };
+
+  for (const [oldName, newName] of Object.entries(legacyMap)) {
+    if (newName === topic && confidenceData[oldName]) {
+      return normalizeConfidenceAction(topic, confidenceData[oldName]);
+    }
+  }
+
+  return "Chưa đánh giá";
+};
+
 export default function TeacherDashboard({ user, onBack }: Props) {
   const [students, setStudents] = useState<UserProfile[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<UserProfile | null>(null);
@@ -820,26 +895,23 @@ Cô tin rằng với ${isClass12D ? 'sự nỗ lực' : 'nền tảng sẵn có'
                           <div className="bg-white border border-border-main rounded-xl overflow-hidden shadow-sm">
                             <table className="w-full text-left text-[0.7rem]">
                               <tbody className="divide-y divide-border-main">
-                                {Object.entries(assessment.topicConfidence || {}).length > 0 ? (
-                                  Object.entries(assessment.topicConfidence).map(([topic, level]) => (
+                                {(TOPICS_BY_STAGE[assessment.stage] || TOPICS_BY_STAGE[1]).map((topic) => {
+                                  const level = getNormalizedTopicValue(topic, assessment.topicConfidence || {});
+                                  return (
                                     <tr key={topic}>
                                       <td className="px-3 py-2 font-bold text-text-main">{topic}</td>
                                       <td className="px-3 py-2 text-right">
                                         <span className={`px-2 py-0.5 rounded-md font-bold text-[0.55rem] uppercase ${
-                                          level === 'Rất tự tin' ? 'bg-green-100 text-green-700' :
-                                          level === 'Tự tin' ? 'bg-blue-100 text-blue-700' :
+                                          level.includes('Rất tự tin') ? 'bg-green-100 text-green-700' :
+                                          level.includes('Bình thường') ? 'bg-blue-100 text-blue-700' :
                                           'bg-orange-100 text-orange-700'
                                         }`}>
                                           {level}
                                         </span>
                                       </td>
                                     </tr>
-                                  ))
-                                ) : (
-                                  <tr>
-                                    <td className="px-3 py-4 text-center text-text-sub italic">Chưa có dữ liệu.</td>
-                                  </tr>
-                                )}
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>

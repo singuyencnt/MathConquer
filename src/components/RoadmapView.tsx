@@ -59,6 +59,35 @@ const TOPICS_BY_STAGE: Record<number, string[]> = {
   ]
 };
 
+const normalizeConfidenceAction = (topic: string, confidence: any) => {
+  let level = String(confidence || "Chưa đánh giá");
+  if (level === 'Tự tin') return 'Bình thường (5-7đ)';
+  if (level === 'Chưa tự tin') return 'Rất yếu / Mất gốc';
+  if (level === 'Rất tự tin' && !level.includes('8-10đ')) return 'Rất tự tin (8-10đ)';
+  return level;
+};
+
+const getNormalizedTopicValue = (topic: string, confidenceData: Record<string, any>) => {
+  if (confidenceData[topic]) return normalizeConfidenceAction(topic, confidenceData[topic]);
+  
+  // Mapping for legacy topic names to keep some data
+  const legacyMap: Record<string, string> = {
+    "Dãy số và cấp số (Lớp 11)": "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Nguyên hàm và tích phân": "Nguyên hàm, tích phân, ứng dụng (Lớp 12)",
+    "Phương pháp tọa độ trong không gian": "Phương pháp tọa độ trong không gian (Lớp 12)",
+    "Giới hạn và đạo hàm (Lớp 11)": "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Tổ hợp và xác suất (Lớp 11)": "Xác suất (Lớp 10,11,12)"
+  };
+
+  for (const [oldName, newName] of Object.entries(legacyMap)) {
+    if (newName === topic && confidenceData[oldName]) {
+      return normalizeConfidenceAction(topic, confidenceData[oldName]);
+    }
+  }
+
+  return "Chưa đánh giá";
+};
+
 export default function RoadmapView({ user, onBack }: Props) {
   const [history, setHistory] = useState<AssessmentData[]>([]);
   const [selectedRoadmap, setSelectedRoadmap] = useState<AssessmentData | null>(null);
@@ -495,13 +524,7 @@ export default function RoadmapView({ user, onBack }: Props) {
                             </thead>
                             <tbody className="divide-y divide-border-main text-text-sub">
                               {(TOPICS_BY_STAGE[selectedRoadmap.stage] || TOPICS_BY_STAGE[1]).map((topic) => {
-                                const levelRaw = selectedRoadmap.topicConfidence?.[topic] || "Chưa đánh giá";
-                                // Map old levels to new ones for backwards compatibility if needed, 
-                                // but specifically filter and format correctly
-                                let level = levelRaw;
-                                if (level === 'Tự tin') level = 'Bình thường (5-7đ)';
-                                if (level === 'Chưa tự tin') level = 'Rất yếu / Mất gốc';
-                                if (level === 'Rất tự tin') level = 'Rất tự tin (8-10đ)';
+                                const level = getNormalizedTopicValue(topic, selectedRoadmap.topicConfidence || {});
                                 
                                 return (
                                   <tr key={topic}>
