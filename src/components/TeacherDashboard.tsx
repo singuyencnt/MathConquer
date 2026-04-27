@@ -283,17 +283,6 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         const isClass12D = student.className === '12D';
 
         let content = `## LỘ TRÌNH ÔN TẬP GIAI ĐOẠN ${stage}\n\n`;
-        content += `### 1. TÓM TẮT ĐÁNH GIÁ NĂNG LỰC\n`;
-        content += `| Chuyên đề | Mức độ hiện tại |\n`;
-        content += `| :--- | :--- |\n`;
-        
-        // Filter out confidence data for topics not in this stage
-        topics.forEach(tName => {
-          const confidence = assessment.topicConfidence?.[tName] || "Chưa đánh giá";
-          content += `| ${tName} | **${confidence}** |\n`;
-        });
-        
-        content += `\n---\n\n`;
         content += `Chào **${student.fullName}** nhé! Cô giáo rất ấn tượng với sự nỗ lực của em thời gian qua. `;
         
         if (isClass12D) {

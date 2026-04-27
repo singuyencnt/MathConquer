@@ -13,6 +13,52 @@ interface Props {
   onBack: () => void;
 }
 
+const TOPICS_BY_STAGE: Record<number, string[]> = {
+  1: [
+    "Hình học không gian (Lớp 11)",
+    "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Lượng giác (Lớp 11)",
+    "Lý thuyết đồ thị (Lớp 11)",
+    "Phương trình, bất phương trình (Lớp 11)",
+    "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Vectơ trong không gian (Lớp 12)"
+  ],
+  2: [
+    "Hình học không gian (Lớp 11)",
+    "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Lượng giác (Lớp 11)",
+    "Lý thuyết đồ thị (Lớp 11)",
+    "Phương trình, bất phương trình (Lớp 11)",
+    "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Vectơ trong không gian (Lớp 12)",
+    "Thống kê (Lớp 12)"
+  ],
+  3: [
+    "Hình học không gian (Lớp 11)",
+    "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Lượng giác (Lớp 11)",
+    "Lý thuyết đồ thị (Lớp 11)",
+    "Phương trình, bất phương trình (Lớp 11)",
+    "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Vectơ trong không gian (Lớp 12)",
+    "Thống kê (Lớp 12)",
+    "Xác suất (Lớp 10,11,12)"
+  ],
+  4: [
+    "Hình học không gian (Lớp 11)",
+    "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
+    "Lượng giác (Lớp 11)",
+    "Lý thuyết đồ thị (Lớp 11)",
+    "Phương trình, bất phương trình (Lớp 11)",
+    "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+    "Vectơ trong không gian (Lớp 12)",
+    "Thống kê (Lớp 12)",
+    "Nguyên hàm, tích phân, ứng dụng (Lớp 12)",
+    "Phương pháp tọa độ trong không gian (Lớp 12)",
+    "Xác suất (Lớp 10,11,12)"
+  ]
+};
+
 export default function RoadmapView({ user, onBack }: Props) {
   const [history, setHistory] = useState<AssessmentData[]>([]);
   const [selectedRoadmap, setSelectedRoadmap] = useState<AssessmentData | null>(null);
@@ -448,8 +494,16 @@ export default function RoadmapView({ user, onBack }: Props) {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-border-main text-text-sub">
-                              {Object.entries(selectedRoadmap.topicConfidence || {}).length > 0 ? (
-                                Object.entries(selectedRoadmap.topicConfidence).map(([topic, level]) => (
+                              {(TOPICS_BY_STAGE[selectedRoadmap.stage] || TOPICS_BY_STAGE[1]).map((topic) => {
+                                const levelRaw = selectedRoadmap.topicConfidence?.[topic] || "Chưa đánh giá";
+                                // Map old levels to new ones for backwards compatibility if needed, 
+                                // but specifically filter and format correctly
+                                let level = levelRaw;
+                                if (level === 'Tự tin') level = 'Bình thường (5-7đ)';
+                                if (level === 'Chưa tự tin') level = 'Rất yếu / Mất gốc';
+                                if (level === 'Rất tự tin') level = 'Rất tự tin (8-10đ)';
+                                
+                                return (
                                   <tr key={topic}>
                                     <td className="px-2 py-1 font-bold text-text-main">{topic}</td>
                                     <td className="px-2 py-1">
@@ -462,12 +516,8 @@ export default function RoadmapView({ user, onBack }: Props) {
                                       </span>
                                     </td>
                                   </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={2} className="px-2 py-3 text-center text-text-sub italic">Chưa có dữ liệu.</td>
-                                </tr>
-                              )}
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
