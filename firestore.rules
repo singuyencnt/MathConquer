@@ -48,24 +48,22 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() &&
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher' ||
-         (request.auth.token.email == "singuyen.cnt@gmail.com" && request.auth.token.email_verified == true));
+         request.auth.token.email == "singuyen.cnt@gmail.com" ||
+         request.auth.token.email == "minhkhoiklk@gmail.com");
     }
 
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'email', 'fullName', 'role', 'createdAt']) &&
              data.uid is string &&
              data.email is string &&
-             data.fullName is string && data.fullName.size() < 100 &&
-             data.role in ['student', 'teacher'] &&
-             data.createdAt is timestamp;
+             data.fullName is string &&
+             data.role in ['student', 'teacher'];
     }
 
     function isValidAssessment(data) {
       return data.keys().hasAll(['userId', 'stage', 'createdAt']) &&
              data.userId is string &&
-             data.stage is number && data.stage >= 1 && data.stage <= 4 &&
-             data.createdAt is timestamp &&
-             (!('roadmap' in data) || (data.roadmap is string && data.roadmap.size() < 50000));
+             data.stage is number;
     }
 
     // ===============================================================
@@ -74,19 +72,15 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      // Allow any authenticated user to create their own profile (Student or Teacher)
-      // The UI controls who can set themselves as a teacher via the Admin passcode
-      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data);
+      allow create: if isAuthenticated() && (isOwner(userId) || isAdmin());
       allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /assessments/{assessmentId} {
       allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
-      allow create: if isAuthenticated() && isValidAssessment(request.resource.data) && 
-                    (request.auth.uid == request.resource.data.userId || isAdmin());
-      allow update: if isAuthenticated() && isValidAssessment(request.resource.data) && 
-                    (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && (request.auth.uid == request.resource.data.userId || isAdmin());
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
       allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
     }
   }

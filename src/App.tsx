@@ -65,16 +65,23 @@ export default function App() {
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data() as UserProfile;
-          // Ensure correct role if it's the default admin email
-          if (firebaseUser.email === 'singuyen.cnt@gmail.com' && userData.role !== 'teacher') {
-            const updatedUser = { ...userData, role: 'teacher' as const };
-            await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
-            setUser(updatedUser);
-          } else if (firebaseUser.email === 'minhkhoiklk@gmail.com' && userData.role === 'teacher') {
-            // Force demote minhkhoiklk to student role
-            const updatedUser = { ...userData, role: 'student' as const };
-            await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
-            setUser(updatedUser);
+          // Force roles based on email
+          if (firebaseUser.email === 'singuyen.cnt@gmail.com') {
+            if (userData.role !== 'teacher') {
+              const updatedUser = { ...userData, role: 'teacher' as const };
+              await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
+              setUser(updatedUser);
+            } else {
+              setUser(userData);
+            }
+          } else if (firebaseUser.email === 'minhkhoiklk@gmail.com') {
+            if (userData.role !== 'student') {
+              const updatedUser = { ...userData, role: 'student' as const };
+              await setDoc(doc(db, 'users', firebaseUser.uid), updatedUser, { merge: true });
+              setUser(updatedUser);
+            } else {
+              setUser(userData);
+            }
           } else {
             setUser(userData);
           }

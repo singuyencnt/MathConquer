@@ -345,12 +345,6 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
         "Cô tin tài năng và sự kiên trì của em sẽ làm nên chuyện trong kỳ thi tới."
       ];
 
-      const allAssessmentsSnapshot = await getDocs(collection(db, 'assessments'));
-      const existingAssessments = allAssessmentsSnapshot.docs.map(d => ({ 
-        id: d.id, 
-        ...d.data() 
-      } as AssessmentData));
-
       const batch = writeBatch(db);
       let count = 0;
 
@@ -361,13 +355,18 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
       for (const demoS of LIST_38_STUDENTS) {
         if (!existingEmails.has(demoS.email.toLowerCase())) {
           const newUid = `demo-uid-${demoS.email.replace(/[@.]/g, '-')}`;
+          
+          // Fix Join Date (CreatedAt) for students between 10/11 and 13/11/2025
+          const joinDay = 10 + Math.floor(Math.random() * 4); // 10, 11, 12, 13
+          const joinDate = new Date(2025, 10, joinDay, 8 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60));
+
           const newUser: UserProfile = {
             uid: newUid,
             email: demoS.email,
             fullName: demoS.name,
             className: demoS.class,
             role: 'student',
-            createdAt: new Date() // Will be updated below
+            createdAt: joinDate
           };
           // Use setDoc via batch
           batch.set(doc(db, 'users', newUid), newUser);
@@ -379,17 +378,17 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
         const studentId = student.uid;
         if (!studentId) continue;
 
-        // Fix Join Date (CreatedAt) for students between 10/11 and 13/11/2025
-        const joinDay = 10 + Math.floor(Math.random() * 4); // 10, 11, 12, 13
-        const joinDate = new Date(2025, 10, joinDay, 8 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60));
-        batch.update(doc(db, 'users', studentId), { createdAt: joinDate });
+        // If it's an existing student, we might want to update their createdAt if it's too new
+        if (!studentId.startsWith('demo-uid-')) {
+          const joinDay = 10 + Math.floor(Math.random() * 4);
+          const joinDate = new Date(2025, 10, joinDay, 8 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60));
+          batch.update(doc(db, 'users', studentId), { createdAt: joinDate });
+        }
 
-        const studentAs = existingAssessments.filter(a => a.userId === studentId);
+        const studentJoinDate = student.createdAt instanceof Date ? student.createdAt : new Date();
 
         for (let stageNum = 1; stageNum <= 3; stageNum++) {
-          let stageAs = studentAs.find(a => a.stage === stageNum);
-          
-          const stageDate = new Date(joinDate);
+          const stageDate = new Date(studentJoinDate);
           if (stageNum === 1) stageDate.setDate(stageDate.getDate() + 1);
           if (stageNum === 2) stageDate.setDate(stageDate.getDate() + 15);
           if (stageNum === 3) stageDate.setDate(stageDate.getDate() + 30);
@@ -432,73 +431,42 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
             logs.push(log);
           }
 
-          if (stageAs) {
-            const updateRef = doc(db, 'assessments', stageAs.id!);
-            const cleanTargetScore = Math.round((stageAs.targetScore || 8.0) * 2) / 2;
-            const cleanDailyTime = (stageAs.dailyTime && stageAs.dailyTime >= 45) ? stageAs.dailyTime : (60 + Math.floor(Math.random() * 60));
-            const cleanDuration = stageAs.durationWeeks || randomWeeks;
-            
-            const dummyConfidence: Record<string, string> = {};
-            const currentStageTopics = STAGE_TOPICS[stageNum as 1|2|3] || STAGE_TOPICS[1];
-            currentStageTopics.forEach(idx => {
-              dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
-            });
-            const dummyBarriers = [...BARRIER_OPTIONS].sort(() => Math.random() - 0.5).slice(0, 2);
-            const dummyFocus = ROADMAP_FOCUS_OPTIONS[Math.floor(Math.random() * ROADMAP_FOCUS_OPTIONS.length)];
+          // Use a predictable ID for demo assessments to avoid duplicates
+          const stageAsId = `as-${studentId}-${stageNum}`;
+          const newDocRef = doc(db, 'assessments', stageAsId);
+          
+          const endScore = 6 + Math.random() * 3;
+          const dummyConfidence: Record<string, string> = {};
+          STAGE_TOPICS[stageNum as 1|2|3].forEach(idx => {
+            dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
+          });
+          const dummyBarriers = [...BARRIER_OPTIONS].sort(() => Math.random() - 0.5).slice(0, 2);
+          const dummyFocus = ROADMAP_FOCUS_OPTIONS[Math.floor(Math.random() * ROADMAP_FOCUS_OPTIONS.length)];
 
-            const updatedData: Partial<AssessmentData> = {
-              targetScore: cleanTargetScore,
-              dailyTime: cleanDailyTime,
-              tasks: tasks,
-              learningLogs: logs,
-              topicConfidence: (stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0) ? stageAs.topicConfidence : dummyConfidence,
-              barriers: (stageAs.barriers && stageAs.barriers.length > 0) ? stageAs.barriers : dummyBarriers,
-              roadmapFocus: stageAs.roadmapFocus || dummyFocus,
-              roadmap: generateRichRoadmap(stageNum, student, { 
-                targetScore: cleanTargetScore, 
-                dailyTime: cleanDailyTime,
-                durationWeeks: cleanDuration,
-                barriers: (stageAs.barriers && stageAs.barriers.length > 0) ? stageAs.barriers : dummyBarriers,
-                roadmapFocus: stageAs.roadmapFocus || dummyFocus,
-                topicConfidence: (stageAs.topicConfidence && Object.keys(stageAs.topicConfidence).length > 0) ? stageAs.topicConfidence : dummyConfidence,
-              }),
-              durationWeeks: cleanDuration
-            };
-            
-            batch.update(updateRef, updatedData);
-          } else {
-            const newDocRef = doc(collection(db, 'assessments'));
-            const dummyConfidence: Record<string, string> = {};
-            STAGE_TOPICS[stageNum as 1|2|3].forEach(idx => {
-              dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
-            });
-            const dummyBarriers = [...BARRIER_OPTIONS].sort(() => Math.random() - 0.5).slice(0, 2);
-            const dummyFocus = ROADMAP_FOCUS_OPTIONS[Math.floor(Math.random() * ROADMAP_FOCUS_OPTIONS.length)];
-
-            const newAs: AssessmentData = {
-              userId: studentId,
-              stage: stageNum,
-              scores: { midHK1: Math.round((5 + Math.random() * 3) * 10) / 10, endHK1: Math.round((6 + Math.random() * 3) * 10) / 10 },
-              targetScore: Math.min(10, Math.round((8 + Math.random() * 2) * 2) / 2),
-              dailyTime: 60 + Math.floor(Math.random() * 60),
-              examType: 'Xét đại học',
-              topicConfidence: dummyConfidence,
-              casioSkill: ['Thành thạo', 'Biết cơ bản', 'Chưa biết dùng'][Math.floor(Math.random() * 3)],
+          const newAs: AssessmentData = {
+            userId: studentId,
+            stage: stageNum,
+            scores: { midHK1: Math.round((5 + Math.random() * 3) * 10) / 10, endHK1: Math.round(endScore * 10) / 10 },
+            targetScore: Math.min(10, Math.round((endScore + 1.2) * 2) / 2),
+            dailyTime: 60 + Math.floor(Math.random() * 60),
+            examType: 'Xét đại học',
+            topicConfidence: dummyConfidence,
+            casioSkill: ['Thành thạo', 'Biết cơ bản', 'Chưa biết dùng'][Math.floor(Math.random() * 3)],
+            barriers: dummyBarriers,
+            roadmapFocus: dummyFocus,
+            roadmap: generateRichRoadmap(stageNum, student, {
               barriers: dummyBarriers,
-              roadmapFocus: dummyFocus,
-              roadmap: generateRichRoadmap(stageNum, student, {
-                barriers: dummyBarriers,
-                targetScore: 9.0,
-                dailyTime: 60,
-                durationWeeks: randomWeeks
-              }),
-              tasks: tasks,
-              learningLogs: logs,
-              durationWeeks: randomWeeks,
-              createdAt: stageDate
-            };
-            batch.set(newDocRef, newAs);
-          }
+              targetScore: 9.0,
+              dailyTime: 60,
+              durationWeeks: randomWeeks
+            }),
+            tasks: tasks,
+            learningLogs: logs,
+            durationWeeks: randomWeeks,
+            createdAt: stageDate
+          };
+          
+          batch.set(newDocRef, newAs, { merge: true });
           count++;
         }
       }
