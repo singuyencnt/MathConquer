@@ -454,8 +454,8 @@ export default function RoadmapView({ user, onBack }: Props) {
                                     <td className="px-2 py-1 font-bold text-text-main">{topic}</td>
                                     <td className="px-2 py-1">
                                       <span className={`px-1 py-0.5 rounded-md font-bold text-[0.5rem] uppercase tracking-tighter ${
-                                        level === 'Rất tự tin' ? 'bg-green-100 text-green-700' :
-                                        level === 'Tự tin' ? 'bg-blue-100 text-blue-700' :
+                                        level.includes('Rất tự tin') ? 'bg-green-100 text-green-700' :
+                                        level.includes('Bình thường') ? 'bg-blue-100 text-blue-700' :
                                         'bg-orange-100 text-orange-700'
                                       }`}>
                                         {level}

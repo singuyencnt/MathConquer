@@ -211,24 +211,24 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       ];
 
       const TOPICS = [
-        "Ứng dụng đạo hàm để khảo sát hàm số",
-        "Hàm số lũy thừa, mũ và logarit",
-        "Nguyên hàm và tích phân",
-        "Số phức",
-        "Thể tích khối đa diện",
-        "Khối tròn xoay",
-        "Phương pháp tọa độ trong không gian",
+        "Hình học không gian (Lớp 11)",
+        "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
         "Lượng giác (Lớp 11)",
-        "Tổ hợp và xác suất (Lớp 11)",
-        "Dãy số và cấp số (Lớp 11)",
-        "Giới hạn và đạo hàm (Lớp 11)"
+        "Lý thuyết đồ thị (Lớp 11)",
+        "Phương trình, bất phương trình (Lớp 11)",
+        "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
+        "Vectơ trong không gian (Lớp 12)",
+        "Thống kê (Lớp 12)",
+        "Xác suất (Lớp 10,11,12)",
+        "Nguyên hàm, tích phân, ứng dụng (Lớp 12)",
+        "Phương pháp tọa độ trong không gian (Lớp 12)"
       ];
 
       const STAGE_TOPICS = {
-        1: [0, 4, 7], // Hàm số, Đa diện, Lượng giác
-        2: [1, 5, 8], // Mũ-Log, Tròn xoay, Tổ hợp
-        3: [2, 3, 6, 9, 10], // Tích phân, Số phức, Oxyz, Dãy số, Giới hạn
-        4: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] // Luyện đề tổng hợp
+        1: [0, 1, 2, 3, 4, 5, 6],
+        2: [0, 1, 2, 3, 4, 5, 6, 7],
+        3: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        4: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
       };
 
       const ROADMAP_FOCUS_OPTIONS = [
@@ -249,9 +249,10 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         "Hay sai sót ở các câu hỏi dễ."
       ];
 
-      const CONFIDENCE_LEVELS = ["Rất tự tin", "Tự tin", "Chưa tự tin"];
+      const CONFIDENCE_LEVELS = ["Rất tự tin (8-10đ)", "Bình thường (5-7đ)", "Rất yếu / Mất gốc"];
 
       const FEELINGS = ['Tốt', 'Bình thường', 'Cần cố gắng'] as const;
+      
       const LOG_TEMPLATES = [
         "Hôm nay em đã ôn tập xong phần lý thuyết và làm được 20 câu trắc nghiệm.",
         "Phần này hơi khó hiểu, em cần xem thêm video bài giảng.",
@@ -269,65 +270,80 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         "Đã hoàn thành mục tiêu tuần 2 sớm hơn dự kiến.",
         "Em cần luyện thêm về kỹ năng sử dụng máy tính Casio cho phần này.",
         "Một ngày học tập khá mệt nhưng cảm thấy rất xứng đáng.",
-        "Em đã hiểu bản chất của đồ thị hàm số sau khi đọc tài liệu hướng dẫn.",
-        "Cố gắng mỗi ngày một ít, thành công đang đến gần.",
-        "Hôm nay em đã tự vẽ được sơ đồ tư duy cho chương Hàm số, dễ nhớ hơn hẳn.",
-        "Em cảm ơn cô đã động viên, nhờ đó em không còn thấy sợ môn Toán nữa.",
-        "Bài tập trắc nghiệm đúng/sai thật thú vị, giúp em hiểu rõ bản chất định lý.",
-        "Em dành cả buổi tối để luyện Oxyz, cuối cùng cũng đã thông suốt.",
-        "Gia sư AI gợi ý cách nhìn mới về bài toán khoảng cách, thật sự rất hay.",
-        "Hôm nay em làm sai 3 câu nhưng đã hiểu rõ nguyên nhân, không tiếc nuối.",
-        "Mục tiêu 9 điểm môn Toán đang gần hơn bao giờ hết, cố lên tôi ơi!",
-        "Em thích nhất là phần tài liệu tóm tắt trong ứng dụng, rất cô đọng.",
-        "Hôm nay em học tập trung làm các bài toán thực tế, thấy Toán học thật gần gũi.",
-        "Em vừa chinh phục được một dạng bài vận dụng cao mà trước đây em bỏ qua.",
-        "Sáng nay em dậy sớm 1 tiếng để ôn tập công thức, thấy hiệu quả bất ngờ.",
-        "Càng học em càng thấy Toán 12 có nhiều điều thú vị để khám phá."
+        "Em đã hiểu bản chất của đồ thị hàm số sau khi đọc tài liệu cô gửi."
       ];
 
-      const generateRichRoadmap = (stage: number, student: { fullName: string }, assessment: Partial<AssessmentData>) => {
+      const generateRichRoadmap = (stage: number, student: { fullName: string, className?: string }, assessment: Partial<AssessmentData>) => {
         const duration = assessment.durationWeeks || 4;
-        const topics = STAGE_TOPICS[stage as 1|2|3].map(idx => TOPICS[idx]);
-        const score = assessment.scores?.endHK1 || assessment.scores?.midHK1 || 5.0;
+        const validTopicIndices = STAGE_TOPICS[stage as 1|2|3|4] || STAGE_TOPICS[1];
+        const topics = validTopicIndices.map(idx => TOPICS[idx]);
+        
         const target = assessment.targetScore || 8.0;
         const dailyTime = assessment.dailyTime || 60;
+        const isClass12D = student.className === '12D';
 
-        let content = `Chào **${student.fullName}** nhé! Cô giáo rất ấn tượng với điểm số ${score.toFixed(1)} hiện tại của em. Với mục tiêu duy trì và chắc chắn đạt điểm ${target}+ trong kỳ thi sắp tới, cô đã thiết kế lộ trình ${duration} tuần tập trung vào việc khắc phục các lỗ hổng lý thuyết và giúp em hệ thống lại kiến thức một cách bản chất nhất. Chúng ta sẽ dành ${dailyTime} phút mỗi ngày để cùng nhau tiến bộ nhé!\n\n`;
+        let content = `## LỘ TRÌNH ÔN TẬP GIAI ĐOẠN ${stage}\n\n`;
+        content += `### 1. TÓM TẮT ĐÁNH GIÁ NĂNG LỰC\n`;
+        content += `| Chuyên đề | Mức độ hiện tại |\n`;
+        content += `| :--- | :--- |\n`;
+        
+        // Filter out confidence data for topics not in this stage
+        topics.forEach(tName => {
+          const confidence = assessment.topicConfidence?.[tName] || "Chưa đánh giá";
+          content += `| ${tName} | **${confidence}** |\n`;
+        });
+        
+        content += `\n---\n\n`;
+        content += `Chào **${student.fullName}** nhé! Cô giáo rất ấn tượng với sự nỗ lực của em thời gian qua. `;
+        
+        if (isClass12D) {
+          content += `Với mục tiêu xây dựng nền tảng vững chắc và đạt mức điểm ${target} trong kỳ thi tới, cô thiết kế lộ trình này tập trung vào việc **LẤY GỐC KIẾN THỨC TRỌNG TÂM**. Chúng ta sẽ ưu tiên làm chủ các câu hỏi mức độ **NHẬN BIẾT** và **THÔNG HIỂU** để không bị mất điểm đáng tiếc nhé!\n\n`;
+        } else {
+          content += `Với mục tiêu duy trì và chắc chắn đạt điểm ${target}+ trong kỳ thi sắp tới, cô đã thiết kế lộ trình ${duration} tuần tập trung vào việc khắc phục các lỗ hổng lý thuyết và giúp em hệ thống lại kiến thức một cách bản chất nhất. Chúng ta sẽ dành ${dailyTime} phút mỗi ngày để cùng nhau tiến bộ nhé!\n\n`;
+        }
 
         for (let w = 1; w <= duration; w++) {
           const topic = topics[(w - 1) % topics.length];
           content += `### TUẦN ${w}: ${topic.toUpperCase()}\n`;
           
-          if (w === duration) {
-            content += `Đây là tuần cuối cùng, cô trò mình sẽ tổng lực ôn tập và luyện đề thực chiến.\n`;
-            content += `- **Thứ 2 & 3:** Ôn lại nhanh các công thức trọng tâm của ${topic}. Làm 15 câu trắc nghiệm mức Vận dụng.\n`;
-            content += `- **Thứ 4:** Luyện đề thi thử cấu trúc mới. Tập trung kiểm soát thời gian và rèn kỹ năng không sai câu dễ.\n`;
-            content += `- **Thứ 5 & 6:** Phân tích kỹ các câu làm sai. Nếu sai do quên công thức, hãy chép lại và dán vào góc học tập nhé.\n`;
-            content += `- **Thứ 7:** Tổng duyệt rà soát toàn bộ kiến thức cùng cô và Gia sư AI.\n`;
-            content += `- **Chủ nhật:** Thư giãn, giữ tâm lý thoải mái để sẵn sàng bứt phá.\n\n`;
-          } else if (w % 2 === 1) {
-            content += `Tuần này chúng ta sẽ bám sát lý thuyết và các dạng bài nhận biết - thông hiểu của chuyên đề này.\n`;
-            content += `- **Thứ 2 & 3:** Hệ thống lại lý thuyết cốt lõi bằng sơ đồ tư duy. Làm 15 câu trắc nghiệm mức Hiểu và 5 câu Đúng - Sai.\n`;
-            content += `- **Thứ 4:** Tập trung vào các ví dụ minh họa và bài toán thực tế cơ bản. Làm 10 câu trắc nghiệm mức Hiểu.\n`;
-            content += `- **Thứ 5 & 6:** Chinh phục các câu hỏi mức độ Thông hiểu. Đừng ngần ngại hỏi Gia sư AI để hiểu rõ bản chất.\n`;
-            content += `- **Thứ 7:** Làm bài kiểm tra chuyên đề ngắn (15 câu) để đánh giá năng lực.\n`;
-            content += `- **Chủ nhật:** Xem lại các ghi chú và nghỉ ngơi một chút nhé.\n\n`;
+          if (isClass12D) {
+            content += `Tuần này em hãy ưu tiên đọc kỹ SGK và các ví dụ minh họa nhé.\n`;
+            content += `- **Thứ 2 & 3:** Xem video bài giảng cơ bản về ${topic}. Chép lại các công thức quan trọng vào sổ tay.\n`;
+            content += `- **Thứ 4 & 5:** Làm 15-20 câu Bài tập mức độ **Biết** (Dễ). Mục tiêu là làm đúng 100% các câu này.\n`;
+            content += `- **Thứ 6 & 7:** Thử sức với 5-10 câu mức độ **Hiểu**. Nếu thắc mắc hãy hỏi ngay Gia sư AI.\n`;
+            content += `- **Chủ nhật:** Ôn tập lại các lỗi sai trong tuần.\n\n`;
           } else {
-            content += `Tuần này chúng ta sẽ đào sâu vào các dạng bài Vận dụng và rèn luyện kỹ năng giải nhanh.\n`;
-            content += `- **Thứ 2 & 3:** Ôn tập các kỹ thuật Casio và mẹo giải nhanh cho ${topic}. Làm 10 câu trắc nghiệm mức Vận dụng.\n`;
-            content += `- **Thứ 4:** Tập trung vào các câu hỏi Đúng - Sai và Trả lời ngắn để hạn chế lỗi sai bản chất.\n`;
-            content += `- **Thứ 5 & 6:** Chinh phục 5 câu Vận dụng cao. Hãy để Gia sư AI dẫn dắt tư duy thay vì chỉ xem đáp án.\n`;
-            content += `- **Thứ 7:** Tổng hợp bài tập tổng hợp tuần (10 câu hỗn hợp).\n`;
-            content += `- **Chủ nhật:** Hệ thống lại các lỗi hay mắc phải trong tuần.\n\n`;
+            if (w === duration) {
+              content += `Đây là tuần cuối cùng, cô trò mình sẽ tổng lực ôn tập và luyện đề thực chiến.\n`;
+              content += `- **Thứ 2 & 3:** Ôn lại nhanh các công thức trọng tâm của ${topic}. Làm 15 câu trắc nghiệm mức Vận dụng.\n`;
+              content += `- **Thứ 4:** Luyện đề thi thử cấu trúc mới. Tập trung kiểm soát thời gian và rèn kỹ năng không sai câu dễ.\n`;
+              content += `- **Thứ 5 & 6:** Phân tích kỹ các câu làm sai. Nếu sai do quên công thức, hãy chép lại và dán vào góc học tập nhé.\n`;
+              content += `- **Thứ 7:** Tổng duyệt rà soát toàn bộ kiến thức cùng cô và Gia sư AI.\n`;
+              content += `- **Chủ nhật:** Thư giãn, giữ tâm lý thoải mái để sẵn sàng bứt phá.\n\n`;
+            } else if (w % 2 === 1) {
+              content += `Tuần này chúng sẽ bám sát lý thuyết và các dạng bài nhận biết - thông hiểu của chuyên đề này.\n`;
+              content += `- **Thứ 2 & 3:** Hệ thống lại lý thuyết cốt lõi bằng sơ đồ tư duy. Làm 15 câu trắc nghiệm mức Hiểu và 5 câu Đúng - Sai.\n`;
+              content += `- **Thứ 4:** Tập trung vào các ví dụ minh họa và bài toán thực tế cơ bản. Làm 10 câu trắc nghiệm mức Hiểu.\n`;
+              content += `- **Thứ 5 & 6:** Chinh phục các câu hỏi mức độ Thông hiểu. Đừng ngần ngại hỏi Gia sư AI để hiểu rõ bản chất.\n`;
+              content += `- **Thứ 7:** Làm bài kiểm tra chuyên đề ngắn (15 câu) để đánh giá năng lực.\n`;
+              content += `- **Chủ nhật:** Xem lại các ghi chú và nghỉ ngơi một chút nhé.\n\n`;
+            } else {
+              content += `Tuần này chúng ta sẽ đào sâu vào các dạng bài Vận dụng và rèn luyện kỹ năng giải nhanh.\n`;
+              content += `- **Thứ 2 & 3:** Ôn tập các kỹ thuật Casio và mẹo giải nhanh cho ${topic}. Làm 10 câu trắc nghiệm mức Vận dụng.\n`;
+              content += `- **Thứ 4:** Tập trung vào các câu hỏi Đúng - Sai và Trả lời ngắn để hạn chế lỗi sai bản chất.\n`;
+              content += `- **Thứ 5 & 6:** Chinh phục 5 câu Vận dụng cao. Hãy để Gia sư AI dẫn dắt tư duy thay vì chỉ xem đáp án.\n`;
+              content += `- **Thứ 7:** Tổng hợp bài tập tổng hợp tuần (10 câu hỗn hợp).\n`;
+              content += `- **Chủ nhật:** Hệ thống lại các lỗi hay mắc phải trong tuần.\n\n`;
+            }
           }
         }
 
         content += `### LỜI KHUYÊN VÀ RÀO CẢN
-- **Để hiểu bản chất:** Đừng chỉ nhìn công thức. Hãy tự đặt câu hỏi "Tại sao lại có bước này?". Vẽ sơ đồ tư duy (Mindmap) để kết nối các định nghĩa.
+${isClass12D ? `- **Đối với HS học trung bình:** Đừng quá lo lắng về các câu khó. Hãy tập trung làm thật chắc các câu 5-6-7 điểm trước. Sự kiên trì quan trọng hơn tốc độ em nhé!` : `- **Để hiểu bản chất:** Đừng chỉ nhìn công thức. Hãy tự đặt câu hỏi "Tại sao lại có bước này?". Vẽ sơ đồ tư duy (Mindmap) để kết nối các định nghĩa.`}
 - **Để bớt quên công thức:** Dùng Flashcard hoặc Mindmap. Mỗi khi học xong một dạng, hãy tự vẽ lại sơ đồ các bước giải.
 - **Mỗi ngày ${dailyTime} phút:** Hãy tắt thông báo điện thoại, tập trung hoàn toàn. Chất lượng hơn số lượng em nhé!
 
-Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ trình này, mục tiêu ${target}+ hoàn hoàn nằm trong tầm tay em. Cố gắng lên nhé!`;
+Cô tin rằng với ${isClass12D ? 'sự nỗ lực' : 'nền tảng sẵn có'}, chỉ cần kiên trì theo lộ trình này, mục tiêu ${target}${isClass12D ? '' : '+'} hoàn hoàn nằm trong tầm tay em. Cố gắng lên nhé!`;
 
         return content;
       };
@@ -355,9 +371,7 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
       for (const demoS of LIST_38_STUDENTS) {
         if (!existingEmails.has(demoS.email.toLowerCase())) {
           const newUid = `demo-uid-${demoS.email.replace(/[@.]/g, '-')}`;
-          
-          // Fix Join Date (CreatedAt) for students between 10/11 and 13/11/2025
-          const joinDay = 10 + Math.floor(Math.random() * 4); // 10, 11, 12, 13
+          const joinDay = 10 + Math.floor(Math.random() * 4);
           const joinDate = new Date(2025, 10, joinDay, 8 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60));
 
           const newUser: UserProfile = {
@@ -368,7 +382,6 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
             role: 'student',
             createdAt: joinDate
           };
-          // Use setDoc via batch
           batch.set(doc(db, 'users', newUid), newUser);
           studentsToSeed.push(newUser);
         }
@@ -378,7 +391,6 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
         const studentId = student.uid;
         if (!studentId) continue;
 
-        // If it's an existing student, we might want to update their createdAt if it's too new
         if (!studentId.startsWith('demo-uid-')) {
           const joinDay = 10 + Math.floor(Math.random() * 4);
           const joinDate = new Date(2025, 10, joinDay, 8 + Math.floor(Math.random() * 10), Math.floor(Math.random() * 60));
@@ -386,6 +398,7 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
         }
 
         const studentJoinDate = student.createdAt instanceof Date ? student.createdAt : new Date();
+        const isClass12D = student.className === '12D';
 
         for (let stageNum = 1; stageNum <= 3; stageNum++) {
           const stageDate = new Date(studentJoinDate);
@@ -411,18 +424,14 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
           for (let l = 0; l < logCount; l++) {
             const logDate = new Date(stageDate);
             logDate.setDate(logDate.getDate() + (l * 3) + 1);
-            
-            const logFeeling = FEELINGS[Math.floor(Math.random() * FEELINGS.length)];
-            const hasResponse = Math.random() > 0.4;
-            
+            const logFeeling = isClass12D ? (Math.random() > 0.4 ? 'Cần cố gắng' : 'Bình thường') : FEELINGS[Math.floor(Math.random() * FEELINGS.length)];
             const log: LearningLog = {
               id: `log-${stageNum}-${l}-${Date.now()}-${Math.random()}`,
               date: logDate,
               content: shuffledTemplates[l % shuffledTemplates.length],
               feeling: logFeeling
             };
-
-            if (hasResponse) {
+            if (Math.random() > 0.4) {
               const resDate = new Date(logDate);
               resDate.setHours(resDate.getHours() + 4 + Math.floor(Math.random() * 20));
               log.teacherResponse = TEACHER_RESPONSES[Math.floor(Math.random() * TEACHER_RESPONSES.length)];
@@ -431,32 +440,39 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
             logs.push(log);
           }
 
-          // Use a predictable ID for demo assessments to avoid duplicates
           const stageAsId = `as-${studentId}-${stageNum}`;
           const newDocRef = doc(db, 'assessments', stageAsId);
-          
-          const endScore = 6 + Math.random() * 3;
+          const endScore = isClass12D ? (3.5 + Math.random() * 2) : (6 + Math.random() * 3.5);
           const dummyConfidence: Record<string, string> = {};
-          STAGE_TOPICS[stageNum as 1|2|3].forEach(idx => {
-            dummyConfidence[TOPICS[idx]] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
+          
+          // Get specific topics for this stage
+          const currentStageTopicIndices = STAGE_TOPICS[stageNum as 1|2|3] || STAGE_TOPICS[1];
+          currentStageTopicIndices.forEach(idx => {
+            const topicName = TOPICS[idx];
+            if (isClass12D) {
+              dummyConfidence[topicName] = Math.random() > 0.6 ? "Rất yếu / Mất gốc" : "Bình thường (5-7đ)";
+            } else {
+              dummyConfidence[topicName] = CONFIDENCE_LEVELS[Math.floor(Math.random() * CONFIDENCE_LEVELS.length)];
+            }
           });
           const dummyBarriers = [...BARRIER_OPTIONS].sort(() => Math.random() - 0.5).slice(0, 2);
-          const dummyFocus = ROADMAP_FOCUS_OPTIONS[Math.floor(Math.random() * ROADMAP_FOCUS_OPTIONS.length)];
+          const dummyFocus = isClass12D ? ROADMAP_FOCUS_OPTIONS[0] : ROADMAP_FOCUS_OPTIONS[Math.floor(Math.random() * ROADMAP_FOCUS_OPTIONS.length)];
 
           const newAs: AssessmentData = {
             userId: studentId,
             stage: stageNum,
-            scores: { midHK1: Math.round((5 + Math.random() * 3) * 10) / 10, endHK1: Math.round(endScore * 10) / 10 },
-            targetScore: Math.min(10, Math.round((endScore + 1.2) * 2) / 2),
-            dailyTime: 60 + Math.floor(Math.random() * 60),
-            examType: 'Xét đại học',
+            scores: { midHK1: Math.round((endScore - 0.5 - Math.random()) * 10) / 10, endHK1: Math.round(endScore * 10) / 10 },
+            targetScore: isClass12D ? (Math.round((5.5 + Math.random() * 1.5) * 2) / 2) : Math.min(10, Math.round((endScore + 1.2) * 2) / 2),
+            dailyTime: isClass12D ? (45 + Math.floor(Math.random() * 30)) : (60 + Math.floor(Math.random() * 60)),
+            examType: isClass12D ? 'Xét tốt nghiệp' : 'Xét đại học',
             topicConfidence: dummyConfidence,
-            casioSkill: ['Thành thạo', 'Biết cơ bản', 'Chưa biết dùng'][Math.floor(Math.random() * 3)],
+            casioSkill: isClass12D ? 'Chưa biết dùng' : ['Thành thạo', 'Biết cơ bản', 'Chưa biết dùng'][Math.floor(Math.random() * 3)],
             barriers: dummyBarriers,
             roadmapFocus: dummyFocus,
             roadmap: generateRichRoadmap(stageNum, student, {
+              topicConfidence: dummyConfidence,
               barriers: dummyBarriers,
-              targetScore: 9.0,
+              targetScore: isClass12D ? 6.5 : 9.0,
               dailyTime: 60,
               durationWeeks: randomWeeks
             }),
@@ -465,7 +481,6 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
             durationWeeks: randomWeeks,
             createdAt: stageDate
           };
-          
           batch.set(newDocRef, newAs, { merge: true });
           count++;
         }
@@ -477,9 +492,7 @@ Cô tin rằng với nền tảng sẵn có, chỉ cần kiên trì theo lộ tr
       const querySnapshot = await getDocs(query(collection(db, 'users'), where('role', '==', 'student')));
       setStudents(querySnapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() } as UserProfile)));
       
-      if (selectedStudent) {
-        handleViewStudent(selectedStudent);
-      }
+      if (selectedStudent) handleViewStudent(selectedStudent);
     } catch (error: any) {
       console.error("Error seeding data:", error);
       alert(`Có lỗi xảy ra: ${error.message || "Không xác định"}`);

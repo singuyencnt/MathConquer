@@ -282,16 +282,16 @@ export default function AssessmentForm({ stage, user, onComplete, onBack }: Prop
                   <thead>
                     <tr className="bg-bg-main border-b border-border-main">
                       <th className="px-4 py-3 text-left font-bold text-text-sub uppercase text-[0.7rem]">Chuyên đề trọng tâm</th>
-                      <th className="px-4 py-3 text-center font-bold text-primary uppercase text-[0.7rem]">Rất tự tin</th>
-                      <th className="px-4 py-3 text-center font-bold text-accent uppercase text-[0.7rem]">Bình thường</th>
-                      <th className="px-4 py-3 text-center font-bold text-red-600 uppercase text-[0.7rem]">Yếu/Mất gốc</th>
+                      <th className="px-4 py-3 text-center font-bold text-primary uppercase text-[0.7rem]">Rất tự tin (8-10đ)</th>
+                      <th className="px-4 py-3 text-center font-bold text-accent uppercase text-[0.7rem]">Bình thường (5-7đ)</th>
+                      <th className="px-4 py-3 text-center font-bold text-red-600 uppercase text-[0.7rem]">Rất yếu / Mất gốc</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-main">
                     {TOPICS_BY_STAGE[stage].map((topic) => (
                       <tr key={topic} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3 text-text-main font-medium">{topic}</td>
-                        {['Rất tự tin', 'Bình thường', 'Rất yếu/Mất gốc'].map((level) => (
+                        {['Rất tự tin (8-10đ)', 'Bình thường (5-7đ)', 'Rất yếu / Mất gốc'].map((level) => (
                           <td key={level} className="px-4 py-3 text-center">
                             <input 
                               type="radio" 
