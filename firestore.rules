@@ -1,87 +1,53 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: users
-    // Document ID: userId (UID)
-    // Fields:
-    //   - uid: string (required)
-    //   - email: string (required)
-    //   - fullName: string (required)
-    //   - className: string (optional)
-    //   - role: string (required, 'student' or 'teacher')
-    //   - createdAt: timestamp (required)
-    //
-    // Collection: assessments
-    // Document ID: auto-generated
-    // Fields:
-    //   - userId: string (required)
-    //   - stage: number (required, 1-4)
-    //   - scores: map (HK scores)
-    //   - targetScore: number
-    //   - dailyTime: number
-    //   - examType: string
-    //   - topicConfidence: map
-    //   - casioSkill: string
-    //   - barriers: list
-    //   - roadmapFocus: string
-    //   - roadmap: string
-    //   - createdAt: timestamp (required)
-    //
-    // ===============================================================
-
-    // ===============================================================
-    // Helper Functions
-    // ===============================================================
     
+    // Hàm kiểm tra đăng nhập
     function isAuthenticated() {
       return request.auth != null;
     }
 
+    // Hàm kiểm tra chủ sở hữu dữ liệu
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Hàm kiểm tra quyền Quản trị (Dựa trên Email)
     function isAdmin() {
-      return isAuthenticated() &&
-        (request.auth.token.email == "singuyen.cnt@gmail.com" ||
-         request.auth.token.email == "minhkhoiklk@gmail.com" ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher');
+      return isAuthenticated() && 
+             (request.auth.token.email == "singuyen.cnt@gmail.com" || 
+              request.auth.token.email == "minhkhoiklk@gmail.com");
     }
 
+    // Kiểm tra tính hợp lệ của dữ liệu người dùng
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'email', 'fullName', 'role', 'createdAt']) &&
+      return data.keys().hasAll(['uid', 'email', 'fullName', 'role']) &&
              data.uid is string &&
-             data.email is string &&
-             data.fullName is string &&
              data.role in ['student', 'teacher'];
     }
 
+    // Kiểm tra tính hợp lệ của lộ trình (Assessment)
     function isValidAssessment(data) {
-      return data.keys().hasAll(['userId', 'stage', 'createdAt']) &&
+      return data.keys().hasAll(['userId', 'stage']) &&
              data.userId is string &&
              data.stage is number;
     }
 
-    // ===============================================================
-    // Rules
-    // ===============================================================
-
+    // Quy tắc cho bộ sưu tập USERS
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      // Cho phép Admin tạo profile cho học sinh hoặc người dùng tự tạo profile cho mình
+      allow create: if isAuthenticated() && (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data);
       allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
       allow delete: if isAdmin();
     }
 
+    // Quy tắc cho bộ sưu tập ASSESSMENTS (Lộ trình & Nhật ký)
     match /assessments/{assessmentId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (request.auth.uid == request.resource.data.userId || isAdmin());
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && (request.auth.uid == request.resource.data.userId || isAdmin()) && isValidAssessment(request.resource.data);
       allow update: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
-      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow delete: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.userId);
     }
   }
 }

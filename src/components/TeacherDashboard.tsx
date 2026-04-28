@@ -1,6 +1,44 @@
 import { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, getDocs, query, where, orderBy, writeBatch, updateDoc, doc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
+import { collection, getDocs, query, where, writeBatch, updateDoc, doc } from 'firebase/firestore';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+    },
+    operationType,
+    path
+  };
+  const jsonError = JSON.stringify(errInfo);
+  console.error('Firestore Error: ', jsonError);
+  throw new Error(jsonError);
+}
 import { UserProfile, AssessmentData, LearningLog } from '../types';
 import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2, Send, Quote, Sparkles, Edit2, X, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -89,6 +127,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   const [editForm, setEditForm] = useState({ fullName: '', className: '' });
   const [isUpdating, setIsUpdating] = useState(false);
   const [studentAssessments, setStudentAssessments] = useState<AssessmentData[]>([]);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -106,7 +145,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         const studentList = querySnapshot.docs.map(doc => doc.data() as UserProfile);
         setStudents(studentList);
       } catch (error) {
-        console.error("Error fetching students:", error);
+        handleFirestoreError(error, OperationType.LIST, 'users');
       } finally {
         setLoading(false);
       }
@@ -143,6 +182,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   const handleViewStudent = async (student: UserProfile) => {
     setSelectedStudent(student);
     setLoadingDetails(true);
+    setPermissionError(null);
     try {
       const q = query(
         collection(db, 'assessments'),
@@ -162,8 +202,21 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       });
 
       setStudentAssessments(assessments);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching student assessments:", error);
+      
+      // If it's a permission error, we'll show a more helpful message
+      if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+        // For Demo accounts, we might hit this if rules are strict.
+        // Let's check if the user is actually 'teacher' role in our state
+        if (user.role === 'teacher') {
+          setPermissionError("Tài khoản Demo đang gặp hạn chế về quyền truy cập dữ liệu trực tiếp từ Database. Vui lòng liên hệ Admin để cập nhật Rules.");
+        } else {
+          setPermissionError("Bạn không có quyền truy cập dữ liệu này.");
+        }
+      } else {
+        setPermissionError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.");
+      }
     } finally {
       setLoadingDetails(false);
     }
@@ -849,6 +902,21 @@ Cô tin rằng với ${isClass12D ? 'sự nỗ lực' : 'nền tảng sẵn có'
               <div className="flex flex-col items-center justify-center py-20">
                 <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
                 <p className="text-text-sub font-medium">Đang tải lộ trình của học sinh...</p>
+              </div>
+            ) : permissionError ? (
+              <div className="geometric-card !p-12 text-center border-red-200 bg-red-50">
+                <X className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <p className="text-red-700 font-bold mb-2">Lỗi phân quyền (Permission Denied)</p>
+                <p className="text-red-600 text-sm">{permissionError}</p>
+                <div className="mt-6 flex flex-col items-center gap-3">
+                  <p className="text-xs text-red-500 max-w-md">Lưu ý: Nếu bạn đang dùng tài khoản Demo, hãy đảm bảo vai trò của bạn đã được hệ thống ghi nhận là "Quản trị viên".</p>
+                  <button 
+                    onClick={() => handleViewStudent(selectedStudent)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider"
+                  >
+                    Thử lại
+                  </button>
+                </div>
               </div>
             ) : studentAssessments.length === 0 ? (
               <div className="geometric-card !p-12 text-center">
