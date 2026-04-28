@@ -16,7 +16,6 @@ const TOPICS_BY_STAGE: Record<number, string[]> = {
     "Hình học không gian (Lớp 11)",
     "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
     "Lượng giác (Lớp 11)",
-    "Lý thuyết đồ thị (Lớp 11)",
     "Phương trình, bất phương trình (Lớp 11)",
     "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
     "Vectơ trong không gian (Lớp 12)"
@@ -25,7 +24,6 @@ const TOPICS_BY_STAGE: Record<number, string[]> = {
     "Hình học không gian (Lớp 11)",
     "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
     "Lượng giác (Lớp 11)",
-    "Lý thuyết đồ thị (Lớp 11)",
     "Phương trình, bất phương trình (Lớp 11)",
     "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
     "Vectơ trong không gian (Lớp 12)",
@@ -35,7 +33,6 @@ const TOPICS_BY_STAGE: Record<number, string[]> = {
     "Hình học không gian (Lớp 11)",
     "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
     "Lượng giác (Lớp 11)",
-    "Lý thuyết đồ thị (Lớp 11)",
     "Phương trình, bất phương trình (Lớp 11)",
     "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
     "Vectơ trong không gian (Lớp 12)",
@@ -46,7 +43,6 @@ const TOPICS_BY_STAGE: Record<number, string[]> = {
     "Hình học không gian (Lớp 11)",
     "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
     "Lượng giác (Lớp 11)",
-    "Lý thuyết đồ thị (Lớp 11)",
     "Phương trình, bất phương trình (Lớp 11)",
     "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
     "Vectơ trong không gian (Lớp 12)",
@@ -150,14 +146,21 @@ export default function TeacherDashboard({ user, onBack }: Props) {
     try {
       const q = query(
         collection(db, 'assessments'),
-        where('userId', '==', student.uid),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', student.uid)
       );
       const querySnapshot = await getDocs(q);
       const assessments = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }) as AssessmentData);
+      
+      // Sort in memory by createdAt desc
+      assessments.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
       setStudentAssessments(assessments);
     } catch (error) {
       console.error("Error fetching student assessments:", error);
@@ -289,7 +292,6 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         "Hình học không gian (Lớp 11)",
         "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
         "Lượng giác (Lớp 11)",
-        "Lý thuyết đồ thị (Lớp 11)",
         "Phương trình, bất phương trình (Lớp 11)",
         "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
         "Vectơ trong không gian (Lớp 12)",
@@ -300,10 +302,10 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       ];
 
       const STAGE_TOPICS = {
-        1: [0, 1, 2, 3, 4, 5, 6],
-        2: [0, 1, 2, 3, 4, 5, 6, 7],
-        3: [0, 1, 2, 3, 4, 5, 6, 7, 8],
-        4: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        1: [0, 1, 2, 3, 4, 5],
+        2: [0, 1, 2, 3, 4, 5, 6],
+        3: [0, 1, 2, 3, 4, 5, 6, 7],
+        4: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
       };
 
       const ROADMAP_FOCUS_OPTIONS = [
@@ -767,7 +769,8 @@ Cô tin rằng với ${isClass12D ? 'sự nỗ lực' : 'nền tảng sẵn có'
               {filteredStudents.map((student) => (
                 <div
                   key={student.uid}
-                  className="geometric-card hover:border-primary hover:shadow-lg transition-all text-left group relative flex flex-col"
+                  onClick={() => handleViewStudent(student)}
+                  className="geometric-card hover:border-primary hover:shadow-lg transition-all text-left group relative flex flex-col cursor-pointer"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-12 h-12 bg-stage-bg rounded-lg flex items-center justify-center text-primary font-bold text-xl">
@@ -804,7 +807,7 @@ Cô tin rằng với ${isClass12D ? 'sự nỗ lực' : 'nền tảng sẵn có'
                       )}
                     </div>
                   </div>
-                  <div className="cursor-pointer flex-1" onClick={() => handleViewStudent(student)}>
+                  <div className="flex-1">
                     <h3 className="font-bold text-text-main group-hover:text-primary transition-colors tracking-tight leading-tight">{student.fullName}</h3>
                     <div className="mt-1 flex flex-col gap-1">
                       <p className="text-[0.7rem] text-text-sub font-medium truncate">{student.email}</p>

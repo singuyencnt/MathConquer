@@ -47,9 +47,9 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher' ||
-         request.auth.token.email == "singuyen.cnt@gmail.com" ||
-         request.auth.token.email == "minhkhoiklk@gmail.com");
+        (request.auth.token.email == "singuyen.cnt@gmail.com" ||
+         request.auth.token.email == "minhkhoiklk@gmail.com" ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher');
     }
 
     function isValidUser(data) {
@@ -71,14 +71,14 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && (isOwner(userId) || isAdmin());
       allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
       allow delete: if isAdmin();
     }
 
     match /assessments/{assessmentId} {
-      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && (request.auth.uid == request.resource.data.userId || isAdmin());
       allow update: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
       allow delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());

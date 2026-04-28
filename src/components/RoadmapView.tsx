@@ -18,7 +18,6 @@ const TOPICS_BY_STAGE: Record<number, string[]> = {
     "Hình học không gian (Lớp 11)",
     "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
     "Lượng giác (Lớp 11)",
-    "Lý thuyết đồ thị (Lớp 11)",
     "Phương trình, bất phương trình (Lớp 11)",
     "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
     "Vectơ trong không gian (Lớp 12)"
@@ -27,7 +26,6 @@ const TOPICS_BY_STAGE: Record<number, string[]> = {
     "Hình học không gian (Lớp 11)",
     "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
     "Lượng giác (Lớp 11)",
-    "Lý thuyết đồ thị (Lớp 11)",
     "Phương trình, bất phương trình (Lớp 11)",
     "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
     "Vectơ trong không gian (Lớp 12)",
@@ -37,7 +35,6 @@ const TOPICS_BY_STAGE: Record<number, string[]> = {
     "Hình học không gian (Lớp 11)",
     "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
     "Lượng giác (Lớp 11)",
-    "Lý thuyết đồ thị (Lớp 11)",
     "Phương trình, bất phương trình (Lớp 11)",
     "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
     "Vectơ trong không gian (Lớp 12)",
@@ -48,7 +45,6 @@ const TOPICS_BY_STAGE: Record<number, string[]> = {
     "Hình học không gian (Lớp 11)",
     "Dãy số- Cấp số cộng- Cấp số nhân (Lớp 11)",
     "Lượng giác (Lớp 11)",
-    "Lý thuyết đồ thị (Lớp 11)",
     "Phương trình, bất phương trình (Lớp 11)",
     "Ứng dụng đạo hàm và khảo sát hàm số (Lớp 12)",
     "Vectơ trong không gian (Lớp 12)",
@@ -104,8 +100,7 @@ export default function RoadmapView({ user, onBack }: Props) {
       try {
         const q = query(
           collection(db, 'assessments'),
-          where('userId', '==', user.uid),
-          orderBy('createdAt', 'desc')
+          where('userId', '==', user.uid)
         );
         const querySnapshot = await getDocs(q);
         const roadmaps = querySnapshot.docs.map(doc => ({
@@ -113,6 +108,13 @@ export default function RoadmapView({ user, onBack }: Props) {
           id: doc.id
         })) as AssessmentData[];
         
+        // Sort in memory by createdAt desc
+        roadmaps.sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+          const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+
         setHistory(roadmaps);
         if (roadmaps.length > 0) {
           setSelectedRoadmap(roadmaps[0]);

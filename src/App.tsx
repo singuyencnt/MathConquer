@@ -37,17 +37,22 @@ export default function App() {
 
   useEffect(() => {
     const fetchLatestAssessment = async () => {
-      if (!user) return; // Allow both student and teacher to fetch their own assessment for demo
+      if (!user) return;
       try {
         const q = query(
           collection(db, 'assessments'),
-          where('userId', '==', user.uid),
-          orderBy('createdAt', 'desc'),
-          limit(1)
+          where('userId', '==', user.uid)
         );
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
-          setLatestAssessment(querySnapshot.docs[0].data() as AssessmentData);
+          const assessments = querySnapshot.docs.map(doc => doc.data() as AssessmentData);
+          // Sort in memory by createdAt desc
+          assessments.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+            const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+            return dateB.getTime() - dateA.getTime();
+          });
+          setLatestAssessment(assessments[0]);
         }
       } catch (error) {
         console.error("Error fetching latest assessment:", error);
