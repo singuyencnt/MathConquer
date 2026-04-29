@@ -12,11 +12,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Hàm kiểm tra quyền Quản trị (Dựa trên Email)
+    // Hàm kiểm tra quyền Quản trị (Dựa trên Email hoặc Vai trò giáo viên)
     function isAdmin() {
       return isAuthenticated() && 
              (request.auth.token.email == "singuyen.cnt@gmail.com" || 
-              request.auth.token.email == "minhkhoiklk@gmail.com");
+              request.auth.token.email == "minhkhoiklk@gmail.com" ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher');
     }
 
     // Kiểm tra tính hợp lệ của dữ liệu người dùng
