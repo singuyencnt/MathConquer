@@ -136,6 +136,9 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [isReplying, setIsReplying] = useState<Record<string, boolean>>({});
+  const [editingRoadmapId, setEditingRoadmapId] = useState<string | null>(null);
+  const [roadmapEditContent, setRoadmapEditContent] = useState('');
+  const [isSavingRoadmap, setIsSavingRoadmap] = useState(false);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -647,6 +650,29 @@ Cô tin rằng với ${isClass12D ? 'sự nỗ lực' : 'nền tảng sẵn có'
     }
   };
 
+  const handleSaveRoadmap = async (assessmentId: string) => {
+    if (!roadmapEditContent.trim()) return;
+    
+    setIsSavingRoadmap(true);
+    try {
+      await updateDoc(doc(db, 'assessments', assessmentId), {
+        roadmap: roadmapEditContent
+      });
+      
+      setStudentAssessments(prev => prev.map(a => 
+        a.id === assessmentId ? { ...a, roadmap: roadmapEditContent } : a
+      ));
+      
+      setEditingRoadmapId(null);
+      alert("Đã cập nhật lộ trình học tập cho học sinh.");
+    } catch (error) {
+      console.error("Error saving roadmap:", error);
+      alert("Không thể lưu lộ trình. Vui lòng thử lại.");
+    } finally {
+      setIsSavingRoadmap(false);
+    }
+  };
+
   const calculateStudentProgress = (assessment: AssessmentData) => {
     if (!assessment.tasks || assessment.tasks.length === 0) return 0;
     const completed = assessment.tasks.filter(t => t.completed).length;
@@ -1046,8 +1072,52 @@ Cô tin rằng với ${isClass12D ? 'sự nỗ lực' : 'nền tảng sẵn có'
 
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                           <div className="xl:col-span-2 space-y-8">
-                            <div className="markdown-body border border-border-main p-8 md:p-12 rounded-2xl bg-white shadow-sm">
-                              <Markdown>{assessment.roadmap || ''}</Markdown>
+                            <div className="markdown-body border border-border-main p-8 md:p-12 rounded-2xl bg-white shadow-sm relative group/roadmap">
+                              {user.email === 'singuyen.cnt@gmail.com' && (
+                                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover/roadmap:opacity-100 transition-opacity z-20">
+                                  {editingRoadmapId === assessment.id ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleSaveRoadmap(assessment.id!)}
+                                        disabled={isSavingRoadmap}
+                                        className="p-2 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 transition-all flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-wider cursor-pointer"
+                                      >
+                                        {isSavingRoadmap ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                        Lưu
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingRoadmapId(null)}
+                                        className="p-2 bg-slate-600 text-white rounded-lg shadow-lg hover:bg-slate-700 transition-all flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-wider cursor-pointer"
+                                      >
+                                        <X className="w-3 h-3" />
+                                        Hủy
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        setEditingRoadmapId(assessment.id!);
+                                        setRoadmapEditContent(assessment.roadmap || '');
+                                      }}
+                                      className="p-2 bg-primary text-white rounded-lg shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2 text-[0.65rem] font-bold uppercase tracking-wider cursor-pointer"
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                      Sửa lộ trình
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+
+                              {editingRoadmapId === assessment.id ? (
+                                <textarea
+                                  value={roadmapEditContent}
+                                  onChange={(e) => setRoadmapEditContent(e.target.value)}
+                                  className="w-full min-h-[500px] p-4 border-2 border-primary/20 rounded-xl outline-none focus:border-primary font-mono text-sm leading-relaxed bg-slate-50"
+                                  placeholder="Nhập nội dung lộ trình (Markdown)..."
+                                />
+                              ) : (
+                                <Markdown>{assessment.roadmap || ''}</Markdown>
+                              )}
                             </div>
 
                             <div className="bg-slate-50 border border-border-main p-8 rounded-2xl">
