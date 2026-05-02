@@ -18,6 +18,7 @@ service cloud.firestore {
         request.auth.token.email == "singuyen.cnt@gmail.com" || 
         request.auth.token.email == "minhkhoiklk@gmail.com" ||
         request.auth.token.email == "admin@demo.app" ||
+        request.auth.uid == "yr6NiV1eLlNSpGHet19xf32CfRs2" || // UID của tài khoản Demo nặc danh
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher')
       );
@@ -59,7 +60,8 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (
         isAdmin() || 
         resource.data.receiverId == 'all' || 
-        resource.data.receiverId == request.auth.uid
+        resource.data.receiverId == request.auth.uid ||
+        (resource.data.receiverId.size() > 6 && resource.data.receiverId.matches('class:.*'))
       );
       allow create: if isAdmin();
       allow update: if isAdmin();

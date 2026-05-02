@@ -204,8 +204,13 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       }
 
       let type: 'individual' | 'broadcast' | 'classroom' = 'broadcast';
+      let finalReceiverId = messageForm.receiverId;
+      let targetClass: string | undefined = undefined;
+
       if (messageForm.receiverId.startsWith('class:')) {
         type = 'classroom';
+        targetClass = messageForm.receiverId.replace('class:', '');
+        finalReceiverId = 'all'; // Chuyển thành 'all' để rules cho phép student đọc
       } else if (messageForm.receiverId !== 'all') {
         type = 'individual';
       }
@@ -213,7 +218,8 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       const newMessage: Partial<SiteMessage> = {
         senderId: user.uid,
         senderName: senderDisplayName,
-        receiverId: messageForm.receiverId,
+        receiverId: finalReceiverId,
+        targetClass: targetClass,
         content: messageForm.content,
         timestamp: timestamp,
         type: type
@@ -610,16 +616,16 @@ export default function TeacherDashboard({ user, onBack }: Props) {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <span className={`text-[0.6rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                                msg.receiverId === 'all' 
+                                msg.receiverId === 'all' && !msg.targetClass
                                   ? 'bg-purple-100 text-purple-700' 
-                                  : msg.receiverId.startsWith('class:') 
+                                  : msg.targetClass
                                     ? 'bg-amber-100 text-amber-700'
                                     : 'bg-blue-100 text-blue-700'
                               }`}>
-                                {msg.receiverId === 'all' 
+                                {msg.receiverId === 'all' && !msg.targetClass
                                   ? 'Tất cả học sinh' 
-                                  : msg.receiverId.startsWith('class:')
-                                    ? `Lớp ${msg.receiverId.replace('class:', '')}`
+                                  : msg.targetClass
+                                    ? `Lớp ${msg.targetClass}`
                                     : students.find(s => s.uid === msg.receiverId)?.fullName || 'Học sinh ẩn'}
                               </span>
                               <span className="text-[0.6rem] text-text-sub font-bold">{msg.timestamp?.toDate ? new Date(msg.timestamp.toDate()).toLocaleString('vi-VN') : 'N/A'}</span>

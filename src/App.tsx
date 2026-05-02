@@ -71,25 +71,22 @@ export default function App() {
       if (!user) return;
       setLoadingMessages(true);
       try {
-        // Fetch all broadcast messages
+        // Fetch all broadcast messages (includes classroom messages with receiverId='all')
         const qBroadcast = query(collection(db, 'messages'), where('receiverId', '==', 'all'));
         const broadcastSnapshot = await getDocs(qBroadcast);
-        const broadcastMsgs = broadcastSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage));
+        const broadcastMsgsRaw = broadcastSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage));
+        
+        // Filter: only show if it's a true broadcast (no targetClass) or matches student's class
+        const broadcastMsgs = broadcastMsgsRaw.filter(msg => 
+          !msg.targetClass || (user.className && msg.targetClass.trim().toUpperCase() === user.className.trim().toUpperCase())
+        );
 
         // Fetch individual messages for this user
         const qIndividual = query(collection(db, 'messages'), where('receiverId', '==', user.uid));
         const individualSnapshot = await getDocs(qIndividual);
         const individualMsgs = individualSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage));
 
-        // Fetch classroom messages if user has a class
-        let classroomMsgs: SiteMessage[] = [];
-        if (user.className) {
-          const qClassroom = query(collection(db, 'messages'), where('receiverId', '==', `class:${user.className.trim().toUpperCase()}`));
-          const classroomSnapshot = await getDocs(qClassroom);
-          classroomMsgs = classroomSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage));
-        }
-
-        const allMsgs = [...broadcastMsgs, ...individualMsgs, ...classroomMsgs];
+        const allMsgs = [...broadcastMsgs, ...individualMsgs];
         allMsgs.sort((a, b) => {
           const dateA = a.timestamp?.toDate?.() || new Date(a.timestamp || 0);
           const dateB = b.timestamp?.toDate?.() || new Date(b.timestamp || 0);

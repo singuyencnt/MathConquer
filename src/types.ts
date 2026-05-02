@@ -38,6 +38,7 @@ export interface SiteMessage {
   senderId: string;
   senderName: string;
   receiverId: string; // 'all' or student uid
+  targetClass?: string; // Tên lớp (nếu là thông báo lớp)
   content: string;
   timestamp: any;
   type: 'individual' | 'broadcast' | 'classroom';
