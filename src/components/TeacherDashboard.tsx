@@ -492,6 +492,19 @@ export default function TeacherDashboard({ user, onBack }: Props) {
               </div>
               
               <div className="p-8 overflow-y-auto custom-scrollbar flex-1 space-y-8">
+                {user.email === 'admin@demo.app' && (
+                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
+                    <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-amber-800">Lưu ý về quyền hạn (Demo)</p>
+                      <p className="text-[0.7rem] text-amber-700 leading-relaxed">
+                        Bạn đang sử dụng tài khoản <strong>Khách (Anonymous)</strong>. Một số hệ thống bảo mật của Firebase có thể chặn việc gửi tin nhắn diện rộng từ tài khoản nặc danh. 
+                        Nếu gặp lỗi, vui lòng sử dụng tài khoản Google chính thức để gửi thông báo.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleSendMessage} className="space-y-6 bg-slate-50 p-6 rounded-2xl border border-border-main">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>

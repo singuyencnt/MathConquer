@@ -14,10 +14,13 @@ service cloud.firestore {
 
     // Hàm kiểm tra quyền Quản trị (Dựa trên Email hoặc Vai trò giáo viên)
     function isAdmin() {
-      return isAuthenticated() && 
-             (request.auth.token.email == "singuyen.cnt@gmail.com" || 
-              request.auth.token.email == "minhkhoiklk@gmail.com" ||
-              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher');
+      return isAuthenticated() && (
+        request.auth.token.email == "singuyen.cnt@gmail.com" || 
+        request.auth.token.email == "minhkhoiklk@gmail.com" ||
+        request.auth.token.email == "admin@demo.app" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher')
+      );
     }
 
     // Kiểm tra tính hợp lệ của dữ liệu người dùng
@@ -53,7 +56,11 @@ service cloud.firestore {
 
     // Quy tắc cho bộ sưu tập MESSAGES (Thông báo)
     match /messages/{messageId} {
-      allow read: if isAuthenticated() && (isAdmin() || resource.data.receiverId == 'all' || resource.data.receiverId == request.auth.uid);
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.receiverId == 'all' || 
+        resource.data.receiverId == request.auth.uid
+      );
       allow create: if isAdmin();
       allow update: if isAdmin();
       allow delete: if isAdmin();
