@@ -81,7 +81,15 @@ export default function App() {
         const individualSnapshot = await getDocs(qIndividual);
         const individualMsgs = individualSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage));
 
-        const allMsgs = [...broadcastMsgs, ...individualMsgs];
+        // Fetch classroom messages if user has a class
+        let classroomMsgs: SiteMessage[] = [];
+        if (user.className) {
+          const qClassroom = query(collection(db, 'messages'), where('receiverId', '==', `class:${user.className.trim().toUpperCase()}`));
+          const classroomSnapshot = await getDocs(qClassroom);
+          classroomMsgs = classroomSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage));
+        }
+
+        const allMsgs = [...broadcastMsgs, ...individualMsgs, ...classroomMsgs];
         allMsgs.sort((a, b) => {
           const dateA = a.timestamp?.toDate?.() || new Date(a.timestamp || 0);
           const dateB = b.timestamp?.toDate?.() || new Date(b.timestamp || 0);
@@ -665,14 +673,30 @@ export default function App() {
                           key={msg.id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className={`p-6 rounded-3xl border shadow-sm relative overflow-hidden flex flex-col ${msg.type === 'broadcast' ? 'bg-indigo-50/50 border-indigo-100' : 'bg-blue-50/50 border-blue-100'}`}
+                          className={`p-6 rounded-3xl border shadow-sm relative overflow-hidden flex flex-col ${
+                            msg.type === 'broadcast' 
+                              ? 'bg-indigo-50/50 border-indigo-100' 
+                              : msg.type === 'classroom'
+                                ? 'bg-amber-50/50 border-amber-100'
+                                : 'bg-blue-50/50 border-blue-100'
+                          }`}
                         >
                           <div className="absolute top-0 right-0 p-4 opacity-5">
                             <Quote className="w-12 h-12" />
                           </div>
                           <div className="flex items-center justify-between mb-4 relative z-10">
-                            <span className={`text-[0.6rem] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${msg.type === 'broadcast' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'}`}>
-                              {msg.type === 'broadcast' ? 'Thông báo chung' : 'Nhắn riêng cho em'}
+                            <span className={`text-[0.6rem] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                              msg.type === 'broadcast' 
+                                ? 'bg-indigo-100 text-indigo-700' 
+                                : msg.type === 'classroom'
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {msg.type === 'broadcast' 
+                                ? 'Thông báo chung' 
+                                : msg.type === 'classroom'
+                                  ? `Thông báo lớp ${user?.className}`
+                                  : 'Nhắn riêng cho em'}
                             </span>
                             <span className="text-[0.6rem] text-text-sub font-bold">{msg.timestamp?.toDate ? new Date(msg.timestamp.toDate()).toLocaleDateString('vi-VN') : ''}</span>
                           </div>

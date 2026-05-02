@@ -144,6 +144,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   const [sentMessages, setSentMessages] = useState<SiteMessage[]>([]);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [messageForm, setMessageForm] = useState({ content: '', receiverId: 'all', customDate: '' });
+  const [messageClassFilter, setMessageClassFilter] = useState('all');
   const [showMsgModal, setShowMsgModal] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
@@ -202,13 +203,20 @@ export default function TeacherDashboard({ user, onBack }: Props) {
         timestamp = Timestamp.fromDate(dateObj);
       }
 
+      let type: 'individual' | 'broadcast' | 'classroom' = 'broadcast';
+      if (messageForm.receiverId.startsWith('class:')) {
+        type = 'classroom';
+      } else if (messageForm.receiverId !== 'all') {
+        type = 'individual';
+      }
+
       const newMessage: Partial<SiteMessage> = {
         senderId: user.uid,
         senderName: senderDisplayName,
         receiverId: messageForm.receiverId,
         content: messageForm.content,
         timestamp: timestamp,
-        type: messageForm.receiverId === 'all' ? 'broadcast' : 'individual'
+        type: type
       };
 
       await addDoc(collection(db, 'messages'), newMessage);
@@ -514,16 +522,39 @@ export default function TeacherDashboard({ user, onBack }: Props) {
                 <form onSubmit={handleSendMessage} className="space-y-6 bg-slate-50 p-6 rounded-2xl border border-border-main">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
+                      <label className="text-[0.65rem] font-black text-text-sub uppercase tracking-wider mb-2 block">Lọc theo lớp</label>
+                      <select 
+                        value={messageClassFilter}
+                        onChange={(e) => {
+                          setMessageClassFilter(e.target.value);
+                          setMessageForm(prev => ({ ...prev, receiverId: e.target.value === 'all' ? 'all' : `class:${e.target.value}` }));
+                        }}
+                        className="w-full border-2 border-border-main rounded-xl px-4 py-3 focus:border-primary outline-none font-bold text-text-main"
+                      >
+                        <option value="all">Tất cả các lớp</option>
+                        {Array.from(new Set(students.map(s => s.className?.trim().toUpperCase()).filter(Boolean))).sort().map(c => (
+                          <option key={c} value={c}>Lớp {c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
                       <label className="text-[0.65rem] font-black text-text-sub uppercase tracking-wider mb-2 block">Người nhận</label>
                       <select 
                         value={messageForm.receiverId} 
                         onChange={(e) => setMessageForm(prev => ({ ...prev, receiverId: e.target.value }))}
                         className="w-full border-2 border-border-main rounded-xl px-4 py-3 focus:border-primary outline-none font-bold text-text-main"
                       >
-                        <option value="all">Tất cả học sinh (Broadcast)</option>
-                        {students.sort((a,b) => a.fullName.localeCompare(b.fullName)).map(s => (
-                          <option key={s.uid} value={s.uid}>{s.fullName} ({s.className || 'N/A'})</option>
-                        ))}
+                        <option value="all">Tất cả học sinh (Toàn bộ)</option>
+                        {messageClassFilter !== 'all' && (
+                          <option value={`class:${messageClassFilter.toUpperCase()}`}>Tất cả học sinh lớp {messageClassFilter.toUpperCase()}</option>
+                        )}
+                        {students
+                          .filter(s => messageClassFilter === 'all' || (s.className?.trim().toUpperCase() === messageClassFilter.toUpperCase()))
+                          .sort((a,b) => a.fullName.localeCompare(b.fullName))
+                          .map(s => (
+                            <option key={s.uid} value={s.uid}>{s.fullName} ({s.className || 'N/A'})</option>
+                          ))
+                        }
                       </select>
                     </div>
                     {user.email === 'singuyen.cnt@gmail.com' && (
@@ -578,8 +609,18 @@ export default function TeacherDashboard({ user, onBack }: Props) {
                         <div key={msg.id} className="p-4 bg-white border border-border-main rounded-xl flex items-start justify-between gap-4 group">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[0.6rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${msg.receiverId === 'all' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                                {msg.receiverId === 'all' ? 'Tất cả học sinh' : students.find(s => s.uid === msg.receiverId)?.fullName || 'Học sinh ẩn'}
+                              <span className={`text-[0.6rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                msg.receiverId === 'all' 
+                                  ? 'bg-purple-100 text-purple-700' 
+                                  : msg.receiverId.startsWith('class:') 
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                {msg.receiverId === 'all' 
+                                  ? 'Tất cả học sinh' 
+                                  : msg.receiverId.startsWith('class:')
+                                    ? `Lớp ${msg.receiverId.replace('class:', '')}`
+                                    : students.find(s => s.uid === msg.receiverId)?.fullName || 'Học sinh ẩn'}
                               </span>
                               <span className="text-[0.6rem] text-text-sub font-bold">{msg.timestamp?.toDate ? new Date(msg.timestamp.toDate()).toLocaleString('vi-VN') : 'N/A'}</span>
                             </div>

@@ -40,7 +40,7 @@ export interface SiteMessage {
   receiverId: string; // 'all' or student uid
   content: string;
   timestamp: any;
-  type: 'individual' | 'broadcast';
+  type: 'individual' | 'broadcast' | 'classroom';
 }
 
 export interface AssessmentData {
