@@ -659,58 +659,116 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="space-y-6">
                     {loadingMessages ? (
-                      <div className="col-span-full flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                      <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
                     ) : messages.length === 0 ? (
-                      <div className="col-span-full py-12 px-8 bg-white border border-border-main border-dashed rounded-3xl text-center">
+                      <div className="py-12 px-8 bg-white border border-border-main border-dashed rounded-3xl text-center">
                         <Bell className="w-8 h-8 text-border-main mx-auto mb-4" />
                         <p className="text-text-sub font-medium italic text-sm">Chưa có thông báo mới nào dành cho em.</p>
                       </div>
                     ) : (
-                      messages.map((msg) => (
-                        <motion.div 
-                          key={msg.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`p-6 rounded-3xl border shadow-sm relative overflow-hidden flex flex-col ${
-                            msg.type === 'broadcast' 
-                              ? 'bg-indigo-50/50 border-indigo-100' 
-                              : msg.type === 'classroom'
-                                ? 'bg-amber-50/50 border-amber-100'
-                                : 'bg-blue-50/50 border-blue-100'
-                          }`}
-                        >
-                          <div className="absolute top-0 right-0 p-4 opacity-5">
-                            <Quote className="w-12 h-12" />
-                          </div>
-                          <div className="flex items-center justify-between mb-4 relative z-10">
-                            <span className={`text-[0.6rem] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                              msg.type === 'broadcast' 
-                                ? 'bg-indigo-100 text-indigo-700' 
-                                : msg.type === 'classroom'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-blue-100 text-blue-700'
-                            }`}>
-                              {msg.type === 'broadcast' 
-                                ? 'Thông báo chung' 
-                                : msg.type === 'classroom'
-                                  ? `Thông báo lớp ${user?.className}`
-                                  : 'Nhắn riêng cho em'}
-                            </span>
-                            <span className="text-[0.6rem] text-text-sub font-bold">{msg.timestamp?.toDate ? new Date(msg.timestamp.toDate()).toLocaleDateString('vi-VN') : ''}</span>
-                          </div>
-                          <p className="text-sm font-medium text-text-main leading-relaxed mb-4 flex-1 relative z-10">"{msg.content}"</p>
-                          <div className="flex items-center gap-2 relative z-10">
-                            <div className="w-6 h-6 bg-white border border-border-main rounded-full flex items-center justify-center text-[0.6rem] font-bold text-primary">
-                              {msg.senderName.charAt(0)}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Latest Notification - Featured */}
+                        <div className="lg:col-span-2">
+                          <h4 className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <Sparkles className="w-3 h-3 text-primary" />
+                            Mới nhất
+                          </h4>
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`p-8 rounded-[2.5rem] border shadow-sm relative overflow-hidden flex flex-col h-full min-h-[250px] ${
+                              messages[0].type === 'broadcast' 
+                                ? 'bg-indigo-50 border-indigo-100' 
+                                : messages[0].type === 'classroom'
+                                  ? 'bg-amber-50 border-amber-100'
+                                  : 'bg-blue-50 border-blue-100'
+                            }`}
+                          >
+                            <div className="absolute top-0 right-0 p-8 opacity-10">
+                              <Quote className="w-24 h-24" />
                             </div>
-                            <span className="text-[0.65rem] font-black text-text-sub uppercase tracking-tight">
-                              {msg.senderName === 'Ban quản trị' ? msg.senderName : `Cô ${msg.senderName.split(' ').pop()}`}
-                            </span>
+                            <div className="flex items-center justify-between mb-6 relative z-10">
+                              <span className={`text-[0.65rem] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
+                                messages[0].type === 'broadcast' 
+                                  ? 'bg-indigo-100 text-indigo-700' 
+                                  : messages[0].type === 'classroom'
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                {messages[0].type === 'broadcast' 
+                                  ? 'Thông báo chung' 
+                                  : messages[0].type === 'classroom'
+                                    ? `Thông báo lớp ${user?.className}`
+                                    : 'Nhắn riêng cho em'}
+                              </span>
+                              <span className="text-xs text-text-sub font-bold">{messages[0].timestamp?.toDate ? new Date(messages[0].timestamp.toDate()).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                            </div>
+                            <p className="text-lg md:text-xl font-bold text-text-main leading-relaxed mb-8 flex-1 relative z-10">"{messages[0].content}"</p>
+                            <div className="flex items-center gap-3 relative z-10">
+                              <div className="w-10 h-10 bg-white border border-border-main shadow-sm rounded-xl flex items-center justify-center text-sm font-black text-primary">
+                                {messages[0].senderName.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="text-xs font-black text-text-main uppercase tracking-tight">
+                                  {messages[0].senderName === 'Ban quản trị' ? messages[0].senderName : `Cô ${messages[0].senderName.split(' ').pop()}`}
+                                </div>
+                                <div className="text-[0.6rem] font-bold text-text-sub uppercase tracking-wider">Người gửi</div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        </div>
+
+                        {/* History - Scrollable List */}
+                        <div className="flex flex-col">
+                          <h4 className="text-[0.65rem] font-black text-text-sub uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <Bell className="w-3 h-3" />
+                            Lịch sử thông báo ({messages.length - 1})
+                          </h4>
+                          <div className="bg-white border border-border-main rounded-[2rem] p-4 flex-1 max-h-[400px] overflow-y-auto space-y-3 custom-scrollbar">
+                            {messages.length > 1 ? (
+                              messages.slice(1).map((msg) => (
+                                <motion.div 
+                                  key={msg.id}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  className="p-4 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-2xl transition-all group"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className={`text-[0.55rem] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded ${
+                                      msg.type === 'broadcast' 
+                                        ? 'bg-indigo-100/50 text-indigo-700' 
+                                        : msg.type === 'classroom'
+                                          ? 'bg-amber-100/50 text-amber-700'
+                                          : 'bg-blue-100/50 text-blue-700'
+                                    }`}>
+                                      {msg.type === 'broadcast' ? 'Chung' : msg.type === 'classroom' ? 'Lớp' : 'Riêng'}
+                                    </span>
+                                    <span className="text-[0.6rem] text-text-sub font-bold">{msg.timestamp?.toDate ? new Date(msg.timestamp.toDate()).toLocaleDateString('vi-VN') : ''}</span>
+                                  </div>
+                                  <p className="text-[0.7rem] font-medium text-text-main leading-normal line-clamp-2 mb-2 italic">"{msg.content}"</p>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 bg-white border border-border-main rounded-full flex items-center justify-center text-[0.4rem] font-bold text-primary">
+                                      {msg.senderName.charAt(0)}
+                                    </div>
+                                    <span className="text-[0.55rem] font-black text-text-sub uppercase tracking-tight">
+                                      {msg.senderName === 'Ban quản trị' ? msg.senderName : `Cô ${msg.senderName.split(' ').pop()}`}
+                                    </span>
+                                  </div>
+                                </motion.div>
+                              ))
+                            ) : (
+                              <div className="h-full flex flex-col items-center justify-center text-center p-8 text-text-sub">
+                                <div className="p-3 bg-slate-50 rounded-full mb-3">
+                                  <Mail className="w-5 h-5 opacity-20" />
+                                </div>
+                                <p className="text-[0.65rem] font-medium italic">Không có thông báo cũ hơn.</p>
+                              </div>
+                            )}
                           </div>
-                        </motion.div>
-                      ))
+                        </div>
+                      </div>
                     )}
                   </div>
                 </section>
