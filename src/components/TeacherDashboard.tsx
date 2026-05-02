@@ -189,7 +189,11 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       let timestamp = serverTimestamp();
       
       if (isSpecialAdmin && messageForm.customDate) {
-        timestamp = Timestamp.fromDate(new Date(messageForm.customDate));
+        const dateObj = new Date(messageForm.customDate);
+        if (isNaN(dateObj.getTime())) {
+          throw new Error("Ngày gửi không hợp lệ.");
+        }
+        timestamp = Timestamp.fromDate(dateObj);
       }
 
       const newMessage: Partial<SiteMessage> = {
@@ -212,8 +216,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       setShowMsgModal(false);
       alert("Đã gửi tin nhắn thành công!");
     } catch (error) {
-      console.error("Error sending message:", error);
-      alert("Không thể gửi tin nhắn.");
+      handleFirestoreError(error, OperationType.CREATE, 'messages');
     } finally {
       setIsSendingMessage(false);
     }
