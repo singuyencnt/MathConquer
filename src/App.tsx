@@ -7,8 +7,8 @@ import { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously } from 'firebase/auth';
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { UserProfile, Role, AssessmentData } from './types';
-import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare, Sparkles, ChevronRight, Menu, X } from 'lucide-react';
+import { UserProfile, Role, AssessmentData, SiteMessage } from './types';
+import { LogOut, GraduationCap, BookOpen, User as UserIcon, LayoutDashboard, Loader2, Users, Target, Mail, School, Award, CheckCircle, Bot, MessageSquare, Sparkles, ChevronRight, Menu, X, Bell, Quote } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import AssessmentForm from './components/AssessmentForm';
 import TeacherDashboard from './components/TeacherDashboard';
@@ -23,6 +23,8 @@ export default function App() {
   const [selectedStage, setSelectedStage] = useState<number>(1);
   const [latestAssessment, setLatestAssessment] = useState<AssessmentData | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [messages, setMessages] = useState<SiteMessage[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   // Set initial view based on role once after login
   useEffect(() => {
@@ -61,6 +63,40 @@ export default function App() {
 
     if (view === 'home' || view === 'roadmap') {
       fetchLatestAssessment();
+    }
+  }, [user, view]);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!user) return;
+      setLoadingMessages(true);
+      try {
+        // Fetch all broadcast messages
+        const qBroadcast = query(collection(db, 'messages'), where('receiverId', '==', 'all'));
+        const broadcastSnapshot = await getDocs(qBroadcast);
+        const broadcastMsgs = broadcastSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage));
+
+        // Fetch individual messages for this user
+        const qIndividual = query(collection(db, 'messages'), where('receiverId', '==', user.uid));
+        const individualSnapshot = await getDocs(qIndividual);
+        const individualMsgs = individualSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage));
+
+        const allMsgs = [...broadcastMsgs, ...individualMsgs];
+        allMsgs.sort((a, b) => {
+          const dateA = a.timestamp?.toDate?.() || new Date(a.timestamp || 0);
+          const dateB = b.timestamp?.toDate?.() || new Date(b.timestamp || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        setMessages(allMsgs);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setLoadingMessages(false);
+      }
+    };
+
+    if (user && view === 'home') {
+      fetchMessages();
     }
   }, [user, view]);
 
@@ -605,6 +641,53 @@ export default function App() {
                     </section>
                   </div>
                 )}
+
+                {/* Stages Tabs Section */}
+                <section className="space-y-8">
+                  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border-main/50">
+                    <div className="space-y-1">
+                      <h3 className="text-2xl font-black text-text-main tracking-tight uppercase">Thông báo từ Giáo viên</h3>
+                      <p className="text-text-sub text-sm font-medium italic">Những lời động viên và nhắn nhủ từ Thầy Cô.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {loadingMessages ? (
+                      <div className="col-span-full flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                    ) : messages.length === 0 ? (
+                      <div className="col-span-full py-12 px-8 bg-white border border-border-main border-dashed rounded-3xl text-center">
+                        <Bell className="w-8 h-8 text-border-main mx-auto mb-4" />
+                        <p className="text-text-sub font-medium italic text-sm">Chưa có thông báo mới nào dành cho em.</p>
+                      </div>
+                    ) : (
+                      messages.map((msg) => (
+                        <motion.div 
+                          key={msg.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`p-6 rounded-3xl border shadow-sm relative overflow-hidden flex flex-col ${msg.type === 'broadcast' ? 'bg-indigo-50/50 border-indigo-100' : 'bg-blue-50/50 border-blue-100'}`}
+                        >
+                          <div className="absolute top-0 right-0 p-4 opacity-5">
+                            <Quote className="w-12 h-12" />
+                          </div>
+                          <div className="flex items-center justify-between mb-4 relative z-10">
+                            <span className={`text-[0.6rem] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${msg.type === 'broadcast' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700'}`}>
+                              {msg.type === 'broadcast' ? 'Thông báo chung' : 'Nhắn riêng cho em'}
+                            </span>
+                            <span className="text-[0.6rem] text-text-sub font-bold">{msg.timestamp?.toDate ? new Date(msg.timestamp.toDate()).toLocaleDateString('vi-VN') : ''}</span>
+                          </div>
+                          <p className="text-sm font-medium text-text-main leading-relaxed mb-4 flex-1 relative z-10">"{msg.content}"</p>
+                          <div className="flex items-center gap-2 relative z-10">
+                            <div className="w-6 h-6 bg-white border border-border-main rounded-full flex items-center justify-center text-[0.6rem] font-bold text-primary">
+                              {msg.senderName.charAt(0)}
+                            </div>
+                            <span className="text-[0.65rem] font-black text-text-sub uppercase tracking-tight">Cô {msg.senderName.split(' ').pop()}</span>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </div>
+                </section>
 
                 {/* Stages Tabs Section */}
                 <section className="space-y-8">

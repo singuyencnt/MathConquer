@@ -50,5 +50,13 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
       allow delete: if isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.userId);
     }
+
+    // Quy tắc cho bộ sưu tập MESSAGES (Thông báo)
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.receiverId == 'all' || resource.data.receiverId == request.auth.uid);
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
   }
 }

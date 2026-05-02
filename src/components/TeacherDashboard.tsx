@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from '../firebase';
-import { collection, getDocs, query, where, writeBatch, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, writeBatch, updateDoc, doc, addDoc, serverTimestamp, orderBy, deleteDoc, Timestamp } from 'firebase/firestore';
 
 enum OperationType {
   CREATE = 'create',
@@ -39,8 +39,8 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   console.error('Firestore Error: ', jsonError);
   throw new Error(jsonError);
 }
-import { UserProfile, AssessmentData, LearningLog, RoadmapTask } from '../types';
-import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2, Send, Quote, Sparkles, Edit2, X, Save, Plus } from 'lucide-react';
+import { UserProfile, AssessmentData, LearningLog, RoadmapTask, SiteMessage } from '../types';
+import { Search, Users, ChevronRight, BookOpen, Calendar, Target, ChevronLeft, Loader2, Trash2, ListChecks, MessageSquare, Smile, Meh, Frown, CheckCircle2, Send, Quote, Sparkles, Edit2, X, Save, Plus, Bell, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 
@@ -141,6 +141,11 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   const [editingTasksId, setEditingTasksId] = useState<string | null>(null);
   const [tasksEditList, setTasksEditList] = useState<RoadmapTask[]>([]);
   const [isSavingTasks, setIsSavingTasks] = useState(false);
+  const [sentMessages, setSentMessages] = useState<SiteMessage[]>([]);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [messageForm, setMessageForm] = useState({ content: '', receiverId: 'all', customDate: '' });
+  const [showMsgModal, setShowMsgModal] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -156,8 +161,73 @@ export default function TeacherDashboard({ user, onBack }: Props) {
       }
     };
 
+    const fetchMessages = async () => {
+      setLoadingMessages(true);
+      try {
+        const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const msgs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage));
+        setSentMessages(msgs);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setLoadingMessages(false);
+      }
+    };
+
     fetchStudents();
+    fetchMessages();
   }, []);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!messageForm.content.trim()) return;
+
+    setIsSendingMessage(true);
+    try {
+      const isSpecialAdmin = user.email === 'singuyen.cnt@gmail.com';
+      let timestamp = serverTimestamp();
+      
+      if (isSpecialAdmin && messageForm.customDate) {
+        timestamp = Timestamp.fromDate(new Date(messageForm.customDate));
+      }
+
+      const newMessage: Partial<SiteMessage> = {
+        senderId: user.uid,
+        senderName: user.fullName,
+        receiverId: messageForm.receiverId,
+        content: messageForm.content,
+        timestamp: timestamp,
+        type: messageForm.receiverId === 'all' ? 'broadcast' : 'individual'
+      };
+
+      await addDoc(collection(db, 'messages'), newMessage);
+      
+      // Refresh messages
+      const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
+      const querySnapshot = await getDocs(q);
+      setSentMessages(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SiteMessage)));
+      
+      setMessageForm({ content: '', receiverId: 'all', customDate: '' });
+      setShowMsgModal(false);
+      alert("Đã gửi tin nhắn thành công!");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("Không thể gửi tin nhắn.");
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: string) => {
+    if (!confirm("Xóa tin nhắn này?")) return;
+    try {
+      await deleteDoc(doc(db, 'messages', msgId));
+      setSentMessages(prev => prev.filter(m => m.id !== msgId));
+    } catch (error) {
+      alert("Lỗi khi xóa tin nhắn.");
+    }
+  };
 
   const handleClearAllGlobalHistory = async () => {
     if (!confirm("CẢNH BÁO QUAN TRỌNG: Bạn đang thực hiện xóa TOÀN BỘ lộ trình của TẤT CẢ học sinh trong hệ thống. Hành động này không thể hoàn tác. Bạn có chắc chắn muốn tiếp tục?")) return;
@@ -407,6 +477,105 @@ export default function TeacherDashboard({ user, onBack }: Props) {
   return (
     <div className="max-w-6xl mx-auto">
       <AnimatePresence>
+        {showMsgModal && (
+          <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="geometric-card w-full max-w-2xl bg-white !p-0 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="bg-primary p-6 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Bell className="w-6 h-6" />
+                  <h3 className="text-xl font-black uppercase tracking-tight">Gửi thông báo</h3>
+                </div>
+                <button onClick={() => setShowMsgModal(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors"><X className="w-6 h-6" /></button>
+              </div>
+              
+              <div className="p-8 overflow-y-auto custom-scrollbar flex-1 space-y-8">
+                <form onSubmit={handleSendMessage} className="space-y-6 bg-slate-50 p-6 rounded-2xl border border-border-main">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-[0.65rem] font-black text-text-sub uppercase tracking-wider mb-2 block">Người nhận</label>
+                      <select 
+                        value={messageForm.receiverId} 
+                        onChange={(e) => setMessageForm(prev => ({ ...prev, receiverId: e.target.value }))}
+                        className="w-full border-2 border-border-main rounded-xl px-4 py-3 focus:border-primary outline-none font-bold text-text-main"
+                      >
+                        <option value="all">Tất cả học sinh (Broadcast)</option>
+                        {students.sort((a,b) => a.fullName.localeCompare(b.fullName)).map(s => (
+                          <option key={s.uid} value={s.uid}>{s.fullName} ({s.className || 'N/A'})</option>
+                        ))}
+                      </select>
+                    </div>
+                    {user.email === 'singuyen.cnt@gmail.com' && (
+                      <div>
+                        <label className="text-[0.65rem] font-black text-text-sub uppercase tracking-wider mb-2 block">Ngày gửi (Custom)</label>
+                        <input 
+                          type="datetime-local" 
+                          value={messageForm.customDate} 
+                          onChange={(e) => setMessageForm(prev => ({ ...prev, customDate: e.target.value }))}
+                          className="w-full border-2 border-border-main rounded-xl px-4 py-3 focus:border-primary outline-none font-bold text-text-main"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label className="text-[0.65rem] font-black text-text-sub uppercase tracking-wider mb-2 block">Nội dung thông báo</label>
+                    <textarea 
+                      value={messageForm.content} 
+                      onChange={(e) => setMessageForm(prev => ({ ...prev, content: e.target.value }))}
+                      placeholder="Nhập nội dung tin nhắn gửi đến học sinh..."
+                      className="w-full border-2 border-border-main rounded-xl px-4 py-4 focus:border-primary outline-none font-medium text-text-main min-h-[120px]"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button 
+                      type="submit" 
+                      disabled={isSendingMessage || !messageForm.content.trim()}
+                      className="px-8 py-3 bg-primary text-white font-black rounded-xl uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg shadow-blue-100"
+                    >
+                      {isSendingMessage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      Gửi thông báo ngay
+                    </button>
+                  </div>
+                </form>
+
+                <div className="space-y-4">
+                  <h4 className="text-[0.7rem] font-black text-text-main uppercase tracking-widest flex items-center gap-2">
+                    <Info className="w-4 h-4 text-primary" />
+                    Lịch sử thông báo đã gửi
+                  </h4>
+                  
+                  <div className="space-y-3">
+                    {loadingMessages ? (
+                      <div className="flex items-center justify-center py-6 text-text-sub text-xs"><Loader2 className="w-4 h-4 animate-spin mr-2" /> Đang tải lịch sử...</div>
+                    ) : sentMessages.length === 0 ? (
+                      <p className="text-xs text-text-sub italic text-center py-6 bg-slate-50 rounded-xl border border-dashed border-border-main">Chưa có thông báo nào được gửi.</p>
+                    ) : (
+                      sentMessages.map(msg => (
+                        <div key={msg.id} className="p-4 bg-white border border-border-main rounded-xl flex items-start justify-between gap-4 group">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[0.6rem] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${msg.receiverId === 'all' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                {msg.receiverId === 'all' ? 'Tất cả học sinh' : students.find(s => s.uid === msg.receiverId)?.fullName || 'Học sinh ẩn'}
+                              </span>
+                              <span className="text-[0.6rem] text-text-sub font-bold">{msg.timestamp?.toDate ? new Date(msg.timestamp.toDate()).toLocaleString('vi-VN') : 'N/A'}</span>
+                            </div>
+                            <p className="text-xs text-text-main font-medium leading-relaxed">{msg.content}</p>
+                          </div>
+                          <button onClick={() => handleDeleteMessage(msg.id!)} className="p-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {editingStudent && (
           <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="geometric-card w-full max-w-md bg-white !p-8 shadow-2xl">
@@ -445,6 +614,10 @@ export default function TeacherDashboard({ user, onBack }: Props) {
                 <p className="text-sm text-text-sub">Theo dõi lộ trình ôn tập của các em học sinh lớp 12.</p>
               </div>
               <div className="flex items-center gap-3 self-start">
+                <button onClick={() => setShowMsgModal(true)} className="flex items-center gap-2 px-4 py-2 bg-stage-bg hover:bg-blue-100 text-primary rounded-lg text-sm font-bold transition-colors border border-primary/20 uppercase tracking-wider">
+                  <Bell className="w-4 h-4" />
+                  Gửi thông báo
+                </button>
                 {user.email === 'singuyen.cnt@gmail.com' && (
                   <div className="flex items-center gap-2">
                     <button onClick={handleSeedDemoData} disabled={seeding} className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-xs font-black hover:shadow-md transition-all disabled:opacity-50 uppercase tracking-wider">{seeding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}Làm đẹp dữ liệu (Demo)</button>

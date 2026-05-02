@@ -33,6 +33,16 @@ export interface LearningLog {
   teacherResponseDate?: any;
 }
 
+export interface SiteMessage {
+  id?: string;
+  senderId: string;
+  senderName: string;
+  receiverId: string; // 'all' or student uid
+  content: string;
+  timestamp: any;
+  type: 'individual' | 'broadcast';
+}
+
 export interface AssessmentData {
   id?: string;
   userId: string;

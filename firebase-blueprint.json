@@ -68,6 +68,20 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "stage", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Thông báo từ giáo viên đến cá nhân hoặc toàn bộ học sinh",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "receiverId": { "type": "string", "description": "UID học sinh hoặc 'all'" },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["individual", "broadcast"] }
+      },
+      "required": ["senderId", "receiverId", "content", "timestamp", "type"]
     }
   },
   "firestore": {
@@ -78,6 +92,10 @@
     "/assessments/{assessmentId}": {
       "schema": "Assessment",
       "description": "Các bản đánh giá và lộ trình của học sinh"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Các thông báo và tin nhắn nội bộ"
     }
   }
 }
