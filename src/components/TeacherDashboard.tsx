@@ -186,6 +186,12 @@ export default function TeacherDashboard({ user, onBack }: Props) {
     setIsSendingMessage(true);
     try {
       const isSpecialAdmin = user.email === 'singuyen.cnt@gmail.com';
+      const isDemoAdmin = user.email === 'admin@demo.app';
+      
+      let senderDisplayName = user.fullName;
+      if (isSpecialAdmin) senderDisplayName = 'Huệ';
+      if (isDemoAdmin) senderDisplayName = 'Ban quản trị';
+
       let timestamp = serverTimestamp();
       
       if (isSpecialAdmin && messageForm.customDate) {
@@ -198,7 +204,7 @@ export default function TeacherDashboard({ user, onBack }: Props) {
 
       const newMessage: Partial<SiteMessage> = {
         senderId: user.uid,
-        senderName: user.fullName,
+        senderName: senderDisplayName,
         receiverId: messageForm.receiverId,
         content: messageForm.content,
         timestamp: timestamp,

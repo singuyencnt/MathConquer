@@ -681,7 +681,9 @@ export default function App() {
                             <div className="w-6 h-6 bg-white border border-border-main rounded-full flex items-center justify-center text-[0.6rem] font-bold text-primary">
                               {msg.senderName.charAt(0)}
                             </div>
-                            <span className="text-[0.65rem] font-black text-text-sub uppercase tracking-tight">Cô {msg.senderName.split(' ').pop()}</span>
+                            <span className="text-[0.65rem] font-black text-text-sub uppercase tracking-tight">
+                              {msg.senderName === 'Ban quản trị' ? msg.senderName : `Cô ${msg.senderName.split(' ').pop()}`}
+                            </span>
                           </div>
                         </motion.div>
                       ))
